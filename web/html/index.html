@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+       <script type="text/javascript" src="{{static_url("js/jquery-2.2.0.min.js")}}"></script>
+       <meta charset="utf-8">
+       <meta http-equiv="X-UA-Compatible" content="IE=edge">
+       <meta name="viewport" content="width=device-width, initial-scale=1">
+       <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+       <meta name="description" content="">
+       <meta name="author" content="">
+       <link rel="icon" type="image/png" href="{{static_url("images/favicon.png")}}">
+
+       <title>brainhack</title>
+
+       <!-- Bootstrap core CSS -->
+       <link href="{{static_url("vendor/bootstrap-3.3.6/dist/css/bootstrap.min.css")}}" rel="stylesheet">
+
+       <!-- Custom styles for this template -->
+       <link href="{{static_url("css/jumbotron.css")}}" rel="stylesheet">
+
+    </head>
+    <body>
+
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/">brainhack</a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+          <ul class="nav navbar-nav navbar-right">
+            <li>
+            <a id="logout" class="btn btn-primary" href="auth/logout/">Log out</a>
+            </li>
+          </ul>
+        </div><!--/.navbar-collapse -->
+      </div>
+    </nav>
+
+    <div class="container">
+      <!-- Example row of columns -->
+      <br>
+      <div class="row">
+        <div id="repository" class="well">
+          {{ repository }}
+        </div>
+      </div>
+
+      <hr>
+      <div id="identify">
+      </div>
+       <div class="input-group">
+        <span class="input-group-addon" id="basic-addon1">@</span>
+        <input type="text" class="form-control" placeholder="Username" aria-describedby="basic-addon1">
+       </div>
+      <div id="validate">
+         <a class="btn btn-default" role="button">validate</a>
+      </div>
+      <footer>
+        <p>&copy; 2016 brainhack, Inc.</p>
+      </footer>
+    </div> <!-- /container -->
+
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <script src="{{static_url("vendor/bootstrap-3.3.6/dist/js/bootstrap.min.js")}}"></script>
+    <script>
+
+   // ==========================================================================
+   // Converts the selected path to a set of clickable items
+    function identify(params){
+      $.ajax({
+           type: "POST",
+           url: 'identify',
+           data: params,
+           success: function(data){
+              $("#identify").html(data);
+            },
+           complete: function(){
+              $("div#identify a.btn").click(assign_rule);
+              $("a.split").click(split);
+           }
+         });
+
+    };
+
+   // ==========================================================================
+   // ==========================================================================
+   // Sends the contents of the inputbox, the state of the processed filepath
+   // in order to add a new hierarchy rule
+
+    function send_text(params){
+      $.ajax({
+           type: "POST",
+           url: 'sendtext',
+           data: params,
+           success: function(data){
+              console.log(data);
+            },
+           complete: function(){
+           },
+         });
+    };
+
+   // ==========================================================================
+   // ==========================================================================
+   // Iterates over the different items, collects their status and builds an array
+   // with this to be sent to the server
+
+    function compile_rule(){
+        rule = Array();
+        $("div#identify a.btn").each(function(){
+           // explicit invariable atoms
+           if ($(this).data('rule') == '') {
+               rule.push($(this).data('value'));
+               }
+           // atoms with identified subparts
+           else if ( $(this).data('rule').search('@') != -1){
+               rule.push($(this).data('rule'));
+           }
+           // identified variable atoms
+           else{
+              rule.push("v@" + $(this).data('rule'));
+            }
+        });
+        return rule;
+    }
+
+   // ==========================================================================
+   // ==========================================================================
+   // Iterates over atoms looking for occurrences of the parameter val
+   // if found, replaces it with the "rule" variable
+    function apply_rule(rule, val){
+        console.log('rule'+rule);
+        console.log('val'+val);
+        $("div#identify a.btn").each(function(){
+            if ($(this).data('value').search(val) != -1 && $(this).data('rule') == '') {
+               console.log($(this).text());
+               r = "@" + rule + "@";
+               $(this).text($(this).data("value").replace(val, r));
+               $(this).data("rule", $(this).data("value").replace(val, r));
+            }
+        });
+    }
+   // ==========================================================================
+
+    $('div.jumbotron div.container').first().html(function(){
+       warning = 'danger';
+       html = $(this).html();
+       if (warning.length != 0){
+          html = '<div id="warning" class="alert alert-danger" role="danger">'+warning+'</div>' + html;
+       }
+       return html;
+    });
+
+
+   // ==========================================================================
+   // Clicking on a file selects it and takes it to identification module
+    $('div#repository a.btn').click(function(){
+       identify({id : $(this).data('path')});
+    });
+   // ==========================================================================
+
+   // ==========================================================================
+   // Proofing the current hierarchy
+    $('div#validate a.btn').click(function(){
+      var params = {validate:true};
+      $.ajax({
+           type: "POST",
+           url: '',
+           data: params,
+           success: function(data){
+              console.log(data);
+              var res = JSON.parse(data);
+              console.log(res);
+              $("#repository a.btn").each(function(){
+                 var path = $(this).data('path');
+                 console.log(path);
+                 console.log( $.inArray(path, res) );
+                 if ($.inArray(path, res) != -1){
+                    $(this).css('background-color', '#aaaaaa');
+                 }
+
+              });
+            },
+           complete: function(){
+           },
+         });
+
+    });
+   // ==========================================================================
+   function update_repository(){
+
+
+   };
+
+   // ==========================================================================
+   // When Enter is pressed, transmit the name of the rule and the selected path
+   $('input').bind("enterKey",function(e){
+      r = compile_rule();
+      var params = {rule : r,
+                text: $("input").val(),
+                path: $("span#path").text() };
+      send_text(params);
+      $("input").val("");
+   });
+   $('input').keyup(function(e){
+       if(e.keyCode == 13)
+       {
+           $(this).trigger("enterKey");
+       }
+   });
+   // ==========================================================================
+
+
+   // ==========================================================================
+   // After clicking on a atom, we assign it a rule in its "rule" data field
+   function assign_rule(evt){
+      console.log($(this).text());
+      val = $("input").val();
+      $(this).text(val + '=' + $(this).data("value"));
+      $(this).data("rule", val);
+      apply_rule(val, $(this).data('value'));
+      $("input").val("");
+   }
+
+   // Split _
+   function split(e){
+      console.log($(this).closest("div.btn-group"));
+      console.log($(this).closest("div.btn-group").children('button.btn').first().data('value')); //hide();
+      var params = {value: $(this).closest("div.btn-group").children('button.btn').first().data('value')};
+
+      $.ajax({
+           type: "POST",
+           url: 'split',
+           data: params,
+           success: function(data){
+              res = JSON.parse(data);
+              data = res[0];
+              value = res[1];
+
+
+              cl = "div.btn-group.under"+value;
+              console.log(cl);
+              $(cl).hide(); //replaceWith(data);
+            },
+           complete: function(){
+              // assign click functions
+           },
+         });
+      e.preventDefault();
+   };
+
+    </script>
+  </body>
+</html>
+
