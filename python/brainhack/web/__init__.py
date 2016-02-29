@@ -284,7 +284,7 @@ class SendTextHandler(BaseHandler):
             rule = self.engine.build_path_from_bits()
             print rule
             self.engine.hierarchy.update({rulename: rule})
-            json.dump(self.engine.hierarchy, open(self.engine.hierarchyjson, 'w'))
+            json.dump(self.engine.hierarchy, open(self.engine.jsonfile, 'w'))
             html = self.engine.hierarchy_to_html()
             self.write(html)
 
