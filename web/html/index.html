@@ -2,6 +2,7 @@
 <html lang="en">
     <head>
        <script type="text/javascript" src="{{static_url("js/jquery-2.2.0.min.js")}}"></script>
+       <script src="{{static_url("vendor/bootstrap-3.3.6/dist/js/bootstrap.min.js")}}"></script>
        <meta charset="utf-8">
        <meta http-equiv="X-UA-Compatible" content="IE=edge">
        <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -20,6 +21,7 @@
 
     </head>
     <body>
+       <img id="loading-image" src="{{ static_url("images/loader.gif") }}" style="position:fixed; left:50%; top:50%; display:none; z-index:1000">
 
     <nav class="navbar navbar-inverse navbar-fixed-top">
       <div class="container">
@@ -45,21 +47,92 @@
     <div class="container">
       <!-- Example row of columns -->
       <br>
-      <div class="row">
-        <div id="repository" class="well">
-          {{ repository }}
+      <div class="panel-group" id="repository-panel" role="tablist" aria-multiselectable="true">
+        <div class="panel panel-default">
+          <div class="panel-heading" role="tab" id="headingOne">
+            <h4 class="panel-title">
+              <a role="button" data-toggle="collapse" data-parent="#accordion" href="#repoOne" aria-expanded="true" aria-controls="repoOne">
+               Repository file tree
+              </a>
+            </h4>
+          </div>
+          <div id="repoOne" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingOne">
+            <div id="repository" class="panel-body">
+                {{ repository }}
+            </div>
+          </div>
         </div>
       </div>
 
       <hr>
-      <div id="identify">
+      <div class="panel-group" id="identify-panel" role="tablist" aria-multiselectable="true">
+        <div class="panel panel-default">
+          <div class="panel-heading" role="tab" id="headingOne">
+            <h4 class="panel-title">
+              <a role="button" data-toggle="collapse" data-parent="#accordion" href="#identifyOne" aria-expanded="true" aria-controls="identifyOne">
+                Identify
+              </a>
+            </h4>
+          </div>
+          <div id="identifyOne" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingOne">
+            <div class="panel-body">
+               <div id="identify">
+               </div>
+               <br>
+               <div id="varinputdiv" class="form-group">
+                 <label class="control-label" for="ie1">Input a variable name</label>
+                 <input type="text" class="form-control" id="ie1">
+                 <span class="glyphicon glyphicon-remove form-control-feedback" aria-hidden="true"></span>
+               </div>
+            </div>
+            <div class="panel-body">
+               <div id="ruleinputdiv" class="form-group">
+                 <label class="control-label" for="ie2">Input a rule name</label>
+                 <input type="text" class="form-control" id="ie2">
+                 <span class="glyphicon glyphicon-remove form-control-feedback" aria-hidden="true"></span>
+               </div>
+
+               <button id="addrule" type="button" class="btn btn-default">Add a rule</button>
+
+            </div>
+          </div>
+        </div>
       </div>
-       <div class="input-group">
-        <span class="input-group-addon" id="basic-addon1">@</span>
-        <input type="text" class="form-control" placeholder="Username" aria-describedby="basic-addon1">
-       </div>
-      <div id="validate">
-         <a class="btn btn-default" role="button">validate</a>
+
+      <div class="panel-group" id="rules-panel" role="tablist" aria-multiselectable="true">
+        <div class="panel panel-default">
+          <div class="panel-heading" role="tab" id="headingOne">
+            <h4 class="panel-title">
+              <a role="button" data-toggle="collapse" data-parent="#accordion" href="#rulesOne" aria-expanded="true" aria-controls="rulesOne">
+                Rules
+              </a>
+            </h4>
+          </div>
+          <div id="rulesOne" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingOne">
+            <div class="panel-body">
+               <br>
+            </div>
+            <br>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel-group" id="stats-panel" role="tablist" aria-multiselectable="true">
+        <div class="panel panel-default">
+          <div class="panel-heading" role="tab" id="headingOne">
+            <h4 class="panel-title">
+              <a role="button" data-toggle="collapse" data-parent="#accordion" href="#statsOne" aria-expanded="true" aria-controls="statsOne">
+                Statistics after validation
+              </a>
+            </h4>
+          </div>
+          <div id="statsOne" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingOne">
+            <div class="panel-body">
+               <br>
+            </div>
+            <br>
+          </div>
+        </div>
       </div>
       <footer>
         <p>&copy; 2016 brainhack, Inc.</p>
@@ -70,194 +143,283 @@
     <!-- Bootstrap core JavaScript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
-    <script src="{{static_url("vendor/bootstrap-3.3.6/dist/js/bootstrap.min.js")}}"></script>
     <script>
+    $(document).ready(function(){
+       $("div#repository a.btn").click(clickfile);
 
-   // ==========================================================================
-   // Converts the selected path to a set of clickable items
-    function identify(params){
-      $.ajax({
-           type: "POST",
-           url: 'identify',
-           data: params,
-           success: function(data){
-              $("#identify").html(data);
-            },
-           complete: function(){
-              $("div#identify a.btn").click(assign_rule);
-              $("a.split").click(split);
-           }
-         });
+       function assign_rule(evt){
+          console.log($(this).closest("div.btn-group"));
+          console.log($("#identify div.btn-group").index($(this).closest("div.btn-group")));
+          var i = $("#identify div.btn-group").index($(this).closest("div.btn-group"));
+          var v = $("#ie1").val();
+          console.log(v);
+          if (v != ''){
+             // Rule has a name: we can assign the rule to the item
+             $.ajax({'url': 'setrule',
+                'type': 'POST',
+                'data': 'i='+i+"&v="+v,
+                'success': function(data){
+                   $("div#identify").html(data);
+                   $("ul.dropdown-menu").dropdown();
+                   $("li.assign").click(assign_rule);
+                   $("li.split").click(split);
+                   $("#ie1").val('');
+                }
+             });
+          }
+          else{
+             // Rule has no name: we shift to the inputbox to ask for a name
+             // and pop the popover
+             console.log("no rule name");
+             $('html, body').animate({
+                 scrollTop: $("#varinputdiv").offset().top
+             }, 2000);
+             $("#varinputdiv").addClass("has-feedback");
+             $("#varinputdiv").addClass("has-error");
 
-    };
+          }
+       };
+       function split(evt){
+         console.log($(this));
+         console.log($("div.btn-group").index($(this).closest("div.btn-group")));
+         var i = $("div.btn-group").index($(this).closest("div.btn-group"));
 
-   // ==========================================================================
-   // ==========================================================================
-   // Sends the contents of the inputbox, the state of the processed filepath
-   // in order to add a new hierarchy rule
+          $.ajax({'url': 'split',
+             'type': 'POST',
+             'data': 'i='+i,
+             'success': function(data){
+                $("div#identify").html(data);
+                $("ul.dropdown-menu").dropdown();
+                $("li.assign").click(assign_rule);
+                $("li.split").click(split);
+             }
+          });
+       };
+       function addrule(evt){
+         var i = $("#ie2").val();
 
-    function send_text(params){
-      $.ajax({
-           type: "POST",
-           url: 'sendtext',
-           data: params,
-           success: function(data){
-              console.log(data);
-            },
-           complete: function(){
-           },
-         });
-    };
+          $.ajax({'url': 'addrule',
+             'type': 'POST',
+             'data': 'text='+i,
+             'success': function(data){
+                $('html, body').animate({
+                    scrollTop: $("#rulesOne").offset().top
+                }, 2000);
+                $("#rulesOne div.panel-body").html(data);
+                $("#checkrules").click(checkrules);
+                $("#validate").click(validate);
+                $(".loadopenfmri").click( loadopenfmri);
+                $(".loadfreesurfer").click( loadfreesurfer);
+                $(".loadmorpho").click( loadmorpho);
+                $(".loadjson").click(loadjson);
+             }
+          });
+       };
+       function validate(evt){
+            var params = {validate:true};
+            $("#loading-image").show();
+            $.ajax({
+                 type: "POST",
+                 url: 'validate',
+                 data: params,
+                 success: function(data){
+                     $("#statsOne div.panel-body").html(data);
+                  },
+                 complete: function(){
+                  $("#loading-image").hide();
+                 },
+               });
 
-   // ==========================================================================
-   // ==========================================================================
-   // Iterates over the different items, collects their status and builds an array
-   // with this to be sent to the server
+       };
 
-    function compile_rule(){
-        rule = Array();
-        $("div#identify a.btn").each(function(){
-           // explicit invariable atoms
-           if ($(this).data('rule') == '') {
-               rule.push($(this).data('value'));
-               }
-           // atoms with identified subparts
-           else if ( $(this).data('rule').search('@') != -1){
-               rule.push($(this).data('rule'));
-           }
-           // identified variable atoms
-           else{
-              rule.push("v@" + $(this).data('rule'));
-            }
-        });
-        return rule;
-    }
+       // On first inputbox keypress event
+       $('#ie1').keyup(function(e){
+          if ($(this).val() != ""){
+            $("li.assign").html('<a href="#">Set rule '+ $("#ie1").val() + "</a>");
+          }
+          else {
+            $("li.assign").html('<a href="#">Set rule</a>');
+          }
+          if(e.keyCode == 13)
+          {
+              $(this).trigger("enterKey");
+          }
+          if ($("#varinputdiv").hasClass('has-error')){
+              $("#varinputdiv").removeClass('has-feedback');
+              $("#varinputdiv").removeClass('has-error');
+          }
+       });
 
-   // ==========================================================================
-   // ==========================================================================
-   // Iterates over atoms looking for occurrences of the parameter val
-   // if found, replaces it with the "rule" variable
-    function apply_rule(rule, val){
-        console.log('rule'+rule);
-        console.log('val'+val);
-        $("div#identify a.btn").each(function(){
-            if ($(this).data('value').search(val) != -1 && $(this).data('rule') == '') {
-               console.log($(this).text());
-               r = "@" + rule + "@";
-               $(this).text($(this).data("value").replace(val, r));
-               $(this).data("rule", $(this).data("value").replace(val, r));
-            }
-        });
-    }
-   // ==========================================================================
+       // On second inputbox keypress event
+       $('#ie2').keyup(function(e){
+          if ($("#ruleinputdiv").hasClass('has-error')){
+              $("#ruleinputdiv").removeClass('has-feedback');
+              $("#ruleinputdiv").removeClass('has-error');
+          }
+          if(e.keyCode == 13)
+          {
+             $('#addrule').click();
+          }
+       });
 
-    $('div.jumbotron div.container').first().html(function(){
-       warning = 'danger';
-       html = $(this).html();
-       if (warning.length != 0){
-          html = '<div id="warning" class="alert alert-danger" role="danger">'+warning+'</div>' + html;
-       }
-       return html;
-    });
+       // Click on addrule button
+       $("#addrule").click(function(e){
+          var length = $("div#identify").children('div.btn-group').length;
+          if (length == 0){
 
+             $('html, body').animate({
+                 scrollTop: $("#repository").offset().top
+             }, 2000);
+             $("#ie2").val("");
+          }
+          else if ($("#ie2").val() == ''){
 
-   // ==========================================================================
-   // Clicking on a file selects it and takes it to identification module
-    $('div#repository a.btn').click(function(){
-       identify({id : $(this).data('path')});
-    });
-   // ==========================================================================
+             // if no rule name provided
+             $('html, body').animate({
+                 scrollTop: $("#ruleinputdiv").offset().top
+             }, 2000);
+             $("#ruleinputdiv").addClass("has-feedback");
+             $("#ruleinputdiv").addClass("has-error");
+          }
+          else {
+             // if a rule name is provided, then add it
+             addrule(e);
+             $("#ie2").val("");
+          }
 
-   // ==========================================================================
-   // Proofing the current hierarchy
-    $('div#validate a.btn').click(function(){
-      var params = {validate:true};
-      $.ajax({
-           type: "POST",
-           url: '',
-           data: params,
-           success: function(data){
-              console.log(data);
-              var res = JSON.parse(data);
-              console.log(res);
-              $("#repository a.btn").each(function(){
-                 var path = $(this).data('path');
-                 console.log(path);
-                 console.log( $.inArray(path, res) );
-                 if ($.inArray(path, res) != -1){
-                    $(this).css('background-color', '#aaaaaa');
+       });
+       function loadopenfmri(e){
+          $.ajax({'url': 'preset',
+             'type': 'POST',
+             'data': 'p=openfmri',
+             'success':function(data){
+                $("#rulesOne div.panel-body").html(data);
+                $('html, body').animate({
+                    scrollTop: $("#rulesOne").offset().top
+                }, 2000);
+                $(".loadjson").click(loadjson);
+                $(".loadopenfmri").click( loadopenfmri);
+                $(".loadfreesurfer").click( loadfreesurfer);
+                $(".loadmorpho").click( loadmorpho);
+                $("#checkrules").click(checkrules);
+                $("#validate").click(validate);
+             }
+          });
+       };
+       function loadfreesurfer(e){
+          $.ajax({'url': 'preset',
+             'type': 'POST',
+             'data': 'p=freesurfer',
+             'success':function(data){
+                $("#rulesOne div.panel-body").html(data);
+                $('html, body').animate({
+                    scrollTop: $("#rulesOne").offset().top
+                }, 2000);
+                $(".loadjson").click(loadjson);
+                $(".loadopenfmri").click( loadopenfmri);
+                $(".loadfreesurfer").click( loadfreesurfer);
+                $(".loadmorpho").click( loadmorpho);
+                $("#checkrules").click(checkrules);
+                $("#validate").click(validate);
+             }
+          });
+       };
+       function loadmorpho(e){
+          $.ajax({'url': 'preset',
+             'type': 'POST',
+             'data': 'p=morphologist',
+             'success':function(data){
+                $("#rulesOne div.panel-body").html(data);
+                $('html, body').animate({
+                    scrollTop: $("#rulesOne").offset().top
+                }, 2000);
+                $(".loadjson").click(loadjson);
+                $(".loadopenfmri").click( loadopenfmri);
+                $(".loadfreesurfer").click( loadfreesurfer);
+                $(".loadmorpho").click( loadmorpho);
+                $("#checkrules").click(checkrules);
+                $("#validate").click(validate);
+             }
+          });
+       };
+
+       function loadjson(e){
+          console.log("loading json");
+          $.ajax({'url': 'preset',
+             'type': 'POST',
+             'data': 'p=json',
+             'success':function(data){
+                $("#rulesOne div.panel-body").html(data);
+                $('html, body').animate({
+                    scrollTop: $("#rulesOne").offset().top
+                }, 2000);
+                $(".loadjson").click(loadjson);
+                $(".loadopenfmri").click( loadopenfmri);
+                $(".loadfreesurfer").click( loadfreesurfer);
+                $("#checkrules").click(checkrules);
+                $("#validate").click(validate);
+             }
+          });
+       };
+       function checkrules(e){
+             var files = Array();
+             var selected = Array();
+             $("div#repository a.btn").each(function(){
+                  files.push($(this).data('path'))
+             });
+             $("#hierarchy label").each(function(){
+                  if ($(this).hasClass('active')){
+                     selected.push($(this).data('rule'));
+                  }
+             });
+             var params = {files:files,
+                           selected:selected};
+             console.log(params);
+             $.ajax({'url': 'validate',
+                'type': 'POST',
+                'data': params,
+                'success':function(data){
+                    var res = JSON.parse(data);
+                    var valid = res['valid'];
+                    var labels = res['labels'];
+                    var repo = res['repo'];
+                    $("#repository").html(repo);
+                    $("#repository a.btn").each(function(){
+                       var path = $(this).data('path');
+                       var index = $.inArray(path, valid);
+                       console.log(index);
+                       if (index != -1){
+                          $(this).css('background-color', '#aaaaaa');
+                          $(this).after("<span> -- " + labels[index] + "</span>");
+                       }
+
+                    });
+                    $("#repository a.btn").click(clickfile);
                  }
-
-              });
-            },
-           complete: function(){
-           },
-         });
-
+             });
+       };
+       function clickfile(e){
+          $.ajax({'url': 'identify',
+             'type': 'POST',
+             'data': 'path='+$(this).data('path'),
+             'success': function(data){
+                $("div#identify").html(data);
+                $("ul.dropdown-menu").dropdown();
+                $("li.assign").click(assign_rule);
+                $("li.split").click(split);
+                $("li.addrule").click(addrule);
+                $('html, body').animate({
+                    scrollTop: $("#identify").offset().top
+                }, 2000);
+             }
+          });
+       };
+       $(".loadopenfmri").click( loadopenfmri);
+       $(".loadfreesurfer").click( loadfreesurfer);
+       $(".loadmorpho").click( loadmorpho);
+       $(".loadjson").click(loadjson);
+       $("#validate").click(validate);
     });
-   // ==========================================================================
-   function update_repository(){
-
-
-   };
-
-   // ==========================================================================
-   // When Enter is pressed, transmit the name of the rule and the selected path
-   $('input').bind("enterKey",function(e){
-      r = compile_rule();
-      var params = {rule : r,
-                text: $("input").val(),
-                path: $("span#path").text() };
-      send_text(params);
-      $("input").val("");
-   });
-   $('input').keyup(function(e){
-       if(e.keyCode == 13)
-       {
-           $(this).trigger("enterKey");
-       }
-   });
-   // ==========================================================================
-
-
-   // ==========================================================================
-   // After clicking on a atom, we assign it a rule in its "rule" data field
-   function assign_rule(evt){
-      console.log($(this).text());
-      val = $("input").val();
-      $(this).text(val + '=' + $(this).data("value"));
-      $(this).data("rule", val);
-      apply_rule(val, $(this).data('value'));
-      $("input").val("");
-   }
-
-   // Split _
-   function split(e){
-      console.log($(this).closest("div.btn-group"));
-      console.log($(this).closest("div.btn-group").children('button.btn').first().data('value')); //hide();
-      var params = {value: $(this).closest("div.btn-group").children('button.btn').first().data('value')};
-
-      $.ajax({
-           type: "POST",
-           url: 'split',
-           data: params,
-           success: function(data){
-              res = JSON.parse(data);
-              data = res[0];
-              value = res[1];
-
-
-              cl = "div.btn-group.under"+value;
-              console.log(cl);
-              $(cl).hide(); //replaceWith(data);
-            },
-           complete: function(){
-              // assign click functions
-           },
-         });
-      e.preventDefault();
-   };
 
     </script>
   </body>
