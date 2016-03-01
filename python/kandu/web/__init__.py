@@ -381,10 +381,8 @@ class Application(tornado.web.Application):
             (r"/validate", ValidateHandler, {'engine': engine} ),
             (r"/addrule", SendTextHandler, {'engine': engine} ),
             (r"/preset", PresetHandler, {'engine': engine} ),
-        ]
-        import brainhack as b
-        dirname = '/'.join(b.__file__.split('/')[:-3])
-        print 'DIRNAME', dirname
+            ]
+        dirname = '/'.join(__file__.split('/')[:-4])
         template_path = osp.join(dirname, 'web')
         static_path = osp.join(dirname, 'web')
         s = {
@@ -394,9 +392,19 @@ class Application(tornado.web.Application):
         tornado.web.Application.__init__(self, handlers, autoescape=None, **s)
 
 def main(args):
-    #tornado.options.parse_command_line()
     engine = Engine(args.repository, args.hierarchy, args.maxitems)
     http_server = tornado.httpserver.HTTPServer(Application(engine))
     http_server.listen(args.port)
     tornado.ioloop.IOLoop.instance().start()
 
+if __name__ == '__main__':
+    import sys
+    import argparse
+    parser = argparse.ArgumentParser(description='Runs the web server')
+    parser.add_argument("--port", help="Port", default=8888, required=False)
+    parser.add_argument("--max-preview", dest='maxitems', default=500, type=int, help="How many files to preview", required=False)
+    parser.add_argument("--repository", dest='repository', type=str, help="Repository folder", required=True)
+    parser.add_argument("--hierarchy", dest='hierarchy', type=str, help="Output hierarchy json", required=True)
+
+    args = parser.parse_args()
+    main(args)
