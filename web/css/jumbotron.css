@@ -20,3 +20,7 @@ body {
    height:300px;
    overflow-y:scroll;
 }
+
+#rulesOne{
+   overflow-x:scroll;
+}

@@ -20,6 +20,28 @@ class Engine():
         self.jsonfile = osp.abspath(hierarchyjson)
         self.maxitems = maxitems
 
+    def check_repository(self):
+        unknown = []
+        identified = {}
+        allatt = {}
+        for root, dirs, files in os.walk(self.repository):
+            for f in files:
+                fp = osp.join(root, f)
+                res = parsefilepath(fp, self.hierarchy)
+                if not res is None:
+                    datatype, att = res
+                    identified[fp] = datatype
+                    for k,v in att.items():
+                       allatt.setdefault(k, []).append(v)
+                else:
+                    unknown.append(fp[len(self.repository)+1:])
+        res = {'unknown' : unknown,
+               'identified': identified,
+               'labels': allatt}
+        print 'done'
+        return res
+
+
     def get_repository_section(self):
         html = '''<div class="btn-group">
                   <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -48,6 +70,7 @@ class Engine():
                 all_files.append(osp.join(root, f))
                 if len(all_files) == n:
                     return all_files
+        return all_files
 
     def slash_split(self, path):
         bits = path[len(self.repository)+1:].split('/')
@@ -109,7 +132,7 @@ class Engine():
                 # variable repetition
                 bits.append('(?P=%s)'%r)
 
-        return osp.join(self.repository, ''.join(bits))
+        return '^'+osp.join(self.repository, ''.join(bits))+'$'
         #return osp.join('(?P<database>[\w -/]+)', ''.join(bits))
 
     def bits_to_html(self):
@@ -277,7 +300,6 @@ class IdentifyHandler(BaseHandler):
 
 class SendTextHandler(BaseHandler):
     def post(self):
-        from pluricent import checkbase as cb
 
         if 'text' in self.request.arguments:
             rulename = self.get_argument('text')
@@ -294,10 +316,28 @@ class MainHandler(BaseHandler):
         html = self.engine.get_repository_section()
         self.render("html/index.html", repository = html)
 
+
+def parsefilepath(filepath, patterns):
+  ''' Matches a filepath with a set of regex given as a dictionary named patterns.
+  Returns the key name of the successfully matched pattern, and the identified attributes
+  ex : c.parsefilepath('/neurospin/cati/Users/reynal/BVdatabase/Paris/CHBR/t1mri/raw/CHBR.nii')
+  ('raw',
+     {'acquisition': 'raw',
+     'database': '/neurospin/cati/Users/reynal/BVdatabase',
+     'extension': 'nii',
+     'group': 'Paris',
+     'modality': 't1mri',
+     'subject': 'CHBR'}) '''
+  import re, os
+  for datatype, path in patterns.items():
+    m = re.match(r"%s"%path, filepath)
+    if m:
+       return datatype, m.groupdict()
+
+
+
 class ValidateHandler(BaseHandler):
     def post(self):
-        from pluricent import checkbase as cb
-
         valid = []
         labels = []
 
@@ -306,31 +346,15 @@ class ValidateHandler(BaseHandler):
             selected = self.get_arguments('selected[]')
             h = dict([(e, self.engine.hierarchy[e]) for e in selected])
             for fp in files:
-                res = cb.parsefilepath(fp, h)
+                res = parsefilepath(fp, h)
                 if not res is None:
                     valid.append(fp)
                     labels.append(res[0])
 
         else:
-            unknown = []
-            identified = {}
-            allatt = {}
-            for root, dirs, files in os.walk(self.engine.repository):
-                for f in files:
-                    fp = osp.join(root, f)
-                    res = cb.parsefilepath(fp, self.engine.hierarchy)
-                    if not res is None:
-                        datatype, att = res
-                        identified[fp] = datatype
-                        for k,v in att.items():
-                           allatt.setdefault(k, []).append(v)
-                    else:
-                        unknown.append(fp[len(self.engine.repository)+1:])
-            res = {'unknown' : unknown,
-                   'identified': identified,
-                   'labels': allatt}
-            #json.dump(res, open('/tmp/validate.json', 'w'), indent=2)
-            print 'done'
+            res = self.engine.check_repository()
+            unknown, identified, labels = res['unknown'], res['identified'], res['labels']
+
             stats = len(identified.items()) / float((len(unknown) + len(identified.items()))) * 100.0
             html = '%.2f %% identified (%s over %s in total)<br><br>'%(stats, len(identified.items()), len(unknown) + len(identified.items()))
             html += "<div id='stats'><table class='table table-condensed'><tr><th>#</th><th>unknown filename</th></tr>"
@@ -376,14 +400,3 @@ def main(args):
     http_server.listen(args.port)
     tornado.ioloop.IOLoop.instance().start()
 
-if __name__ == "__main__":
-    import sys
-    import argparse
-    parser = argparse.ArgumentParser(description='Runs the web server')
-    parser.add_argument("--port", help="Port", default=8888, required=False)
-    parser.add_argument("--max-preview", dest='maxitems', default=500, type=int, help="How many files to preview", required=False)
-    parser.add_argument("--repository", dest='repository', type=str, help="Repository folder", required=True)
-    parser.add_argument("--hierarchy", dest='hierarchy', type=str, help="Output hierarchy json", required=True)
-
-    args = parser.parse_args()
-    main(args)
