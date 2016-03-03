@@ -176,7 +176,7 @@ class Engine():
         for k, v in hierarchy.items():
 
             html += '''<label class="btn btn-primary rule btn-xs" data-rule="%s">
-                  <input type="checkbox" autocomplete="off"> %s : %s</label><br>'''%(k, k, tornado.escape.xhtml_escape(v[v.find(self.repository)+1:]))
+                  <input type="checkbox" autocomplete="off"> %s : %s</label><br>'''%(k, k, tornado.escape.xhtml_escape(v[len(self.repository)+1:]))
         html += '</div>'
 
         html += '''<br><br><button id="checkrules" type="button" class="btn btn-default">Check selected rules</button>
@@ -206,7 +206,7 @@ class SplitHandler(BaseHandler):
         i = self.get_argument('i')
         self.engine.underscore_split(string.atoi(i))
         path = self.engine.path
-        html = '<span id="path">%s</span><br>%s'%(path, path[:len(self.engine.repository)])
+        html = '<span id="path">%s</span><br>'%(path)
         html += self.engine.bits_to_html()
         self.write(html);
 
