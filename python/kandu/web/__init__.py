@@ -14,11 +14,12 @@ from tornado.options import define, options
 define("port", default=8888, help="run on the given port", type=int)
 
 class Engine():
-    def __init__(self, repository, hierarchyjson, maxitems = 500):
+    def __init__(self, repository, jsonfile, ignorelist=[], maxitems = 500):
         self.repository = osp.abspath(repository)
-        self.hierarchy = {}
-        self.jsonfile = osp.abspath(hierarchyjson)
+        self.jsonfile = osp.abspath(jsonfile)
+        self.hierarchy = json.load(open(self.jsonfile))
         self.maxitems = maxitems
+        self.ignorelist = ignorelist
 
     def check_repository(self):
         unknown = []
@@ -57,6 +58,8 @@ class Engine():
                 <br><br>
                 '''%self.jsonfile
         j = self.get_n_first_files(self.repository, n=self.maxitems)
+        if len(self.ignorelist) != 0:
+            html += 'Files matching following rules are not displayed : %s<br><br>'%', '.join([e for e in self.ignorelist if e in self.hierarchy])
         html += ''.join(['<a data-path="%s" class="btn btn-default btn-xs" role="button">%s</a><br>'\
             %(fp, fp[len(self.repository)+1:]) for fp in j])
         html += '%s items max. displayed'%self.maxitems
@@ -67,7 +70,13 @@ class Engine():
 
         for root, dirs, files in os.walk(repo):
             for f in files:
-                all_files.append(osp.join(root, f))
+                fp = osp.join(root, f)
+                res = parsefilepath(fp, self.hierarchy)
+                if res:
+                    datatype, att = res
+                    if datatype in self.ignorelist: continue
+
+                all_files.append(fp)
                 if len(all_files) == n:
                     return all_files
         return all_files
@@ -167,7 +176,7 @@ class Engine():
         for k, v in hierarchy.items():
 
             html += '''<label class="btn btn-primary rule btn-xs" data-rule="%s">
-                  <input type="checkbox" autocomplete="off"> %s : %s</label><br>'''%(k, k, tornado.escape.xhtml_escape(v[len(self.repository)+1:]))
+                  <input type="checkbox" autocomplete="off"> %s : %s</label><br>'''%(k, k, tornado.escape.xhtml_escape(v[v.find(self.repository)+1:]))
         html += '</div>'
 
         html += '''<br><br><button id="checkrules" type="button" class="btn btn-default">Check selected rules</button>
@@ -181,8 +190,10 @@ class Engine():
                     <li class="loadmorpho"><a href="#">Load Morphologist</a></li>
                     <li class="loadjson"><a href="#">Load from %s</a></li>
                   </ul>
-                </div><button id="validate" type="button" class="btn btn-default">Save and validate</button>
-                '''%(self.jsonfile)
+                </div><button id="save" type="button" class="btn btn-default">Save to %s</button>
+                <button id="validate" type="button" class="btn btn-default">Validate</button>
+
+                '''%(self.jsonfile, self.jsonfile, )
         return html
 
 
@@ -204,9 +215,9 @@ class PresetHandler(BaseHandler):
         preset = self.get_argument('p')
         if preset == 'openfmri':
             h = {'raw': os.path.join(self.engine.repository, '(?P<subject>\w+)', '(?P<session>\w+)', 'anatomy', '(?P=subject)_T1w.nii.gz$')}
-            self.engine.hierarchy = h
+            self.engine.hierarchy.update(h)
         elif preset == 'json':
-            self.engine.hierarchy = json.load(open(self.engine.jsonfile))
+            self.engine.hierarchy.update(json.load(open(self.engine.jsonfile)))
         elif preset == 'freesurfer':
             h = {
                   'nu' : os.path.join(self.engine.repository, '(?P<subject>\w+)', 'mri', 'nu.(?P<extension>%s)'%'[\w.]+$'), #image_extensions),
@@ -243,7 +254,7 @@ class PresetHandler(BaseHandler):
                   'white' : os.path.join(self.engine.repository, '(?P<subject>\w+)', 'surf', '(?P<side>[lr]?)h.white$'), #image_extensions),
                   'thickness' : os.path.join(self.engine.repository, '(?P<subject>\w+)', 'surf', '(?P<side>[lr]?)h.thickness$'), #image_extensions),
                  }
-            self.engine.hierarchy = h
+            self.engine.hierarchy.update(h)
         elif preset == 'morphologist':
             image_extensions = '(nii.gz|nii|ima|ima.gz)$'
             mesh_extensions = '(gii|mesh)$'
@@ -272,7 +283,7 @@ class PresetHandler(BaseHandler):
                                  'spm_csfmap_modulated': os.path.join(self.engine.repository, '(?P<group>[\w -]+)', '(?P<subject>\w+)', '(?P<modality>\w+)', '(?P<acquisition>[\w -]+)', 'spm8_new_segment', 'segmentation','(?P=subject)_csf_probamap_modulated.(?P<extension>%s)'%image_extensions),
                                  'spm_tiv_logfile' : os.path.join(self.engine.repository, '(?P<group>[\w -]+)', '(?P<subject>\w+)', '(?P<modality>\w+)', '(?P<acquisition>[\w -]+)', 'whasa_(?P<whasa_analysis>[\w -]+)', 'segmentation','(?P=subject)_TIV_log_file.txt$'),
                 }
-            self.engine.hierarchy = h
+            self.engine.hierarchy.update(h)
         html = self.engine.hierarchy_to_html()
         self.write(html)
 
@@ -306,13 +317,16 @@ class SendTextHandler(BaseHandler):
             rule = self.engine.build_path_from_bits()
             print rule
             self.engine.hierarchy.update({rulename: rule})
-            json.dump(self.engine.hierarchy, open(self.engine.jsonfile, 'w'))
             html = self.engine.hierarchy_to_html()
             self.write(html)
 
 
 class MainHandler(BaseHandler):
     def get(self):
+        self.engine = Engine(repository = self.engine.repository,
+                    jsonfile = self.engine.jsonfile,
+                    ignorelist = self.engine.ignorelist,
+                    maxitems = self.engine.maxitems)
         html = self.engine.get_repository_section()
         self.render("html/index.html", repository = html)
 
@@ -352,16 +366,21 @@ class ValidateHandler(BaseHandler):
                     labels.append(res[0])
 
         else:
-            res = self.engine.check_repository()
-            unknown, identified, labels = res['unknown'], res['identified'], res['labels']
+            action = self.get_argument('validate')
+            if action == 'validate':
+                res = self.engine.check_repository()
+                unknown, identified, labels = res['unknown'], res['identified'], res['labels']
 
-            stats = len(identified.items()) / float((len(unknown) + len(identified.items()))) * 100.0
-            html = '%.2f %% identified (%s over %s in total)<br><br>'%(stats, len(identified.items()), len(unknown) + len(identified.items()))
-            html += "<div id='stats'><table class='table table-condensed'><tr><th>#</th><th>unknown filename</th></tr>"
-            for i, each in enumerate(unknown):
-                html += '<tr><td>%s</td><td>%s</td></tr>'%(i, each)
-            html += "</table></div>"
-            self.write(html)
+                stats = len(identified.items()) / float((len(unknown) + len(identified.items()))) * 100.0
+                html = '%.2f %% identified (%s over %s in total)<br><br>'%(stats, len(identified.items()), len(unknown) + len(identified.items()))
+                html += "<div id='stats'><table class='table table-condensed'><tr><th>#</th><th>unknown filename</th></tr>"
+                for i, each in enumerate(unknown):
+                    html += '<tr><td>%s</td><td>%s</td></tr>'%(i, each)
+                html += "</table></div>"
+                self.write(html)
+            elif action == 'save':
+                print 'saved'
+                json.dump(self.engine.hierarchy, open(self.engine.jsonfile, 'w'), indent=2)
             return
 
         res = {'valid':valid,
@@ -392,7 +411,13 @@ class Application(tornado.web.Application):
         tornado.web.Application.__init__(self, handlers, autoescape=None, **s)
 
 def main(args):
-    engine = Engine(args.repository, args.hierarchy, args.maxitems)
+    ignorelist = [e.rstrip('\n') for e in open(args.ignorelist).readlines()]\
+        if args.ignorelist else []
+
+    engine = Engine(repository = args.repository,
+                    jsonfile = args.jsonfile,
+                    ignorelist = ignorelist,
+                    maxitems = args.maxitems)
     http_server = tornado.httpserver.HTTPServer(Application(engine))
     http_server.listen(args.port)
     tornado.ioloop.IOLoop.instance().start()
@@ -404,7 +429,8 @@ if __name__ == '__main__':
     parser.add_argument("--port", help="Port", default=8888, required=False)
     parser.add_argument("--max-preview", dest='maxitems', default=500, type=int, help="How many files to preview", required=False)
     parser.add_argument("--repository", dest='repository', type=str, help="Repository folder", required=True)
-    parser.add_argument("--hierarchy", dest='hierarchy', type=str, help="Output hierarchy json", required=True)
+    parser.add_argument("--hierarchy", dest='jsonfile', type=str, help="Output hierarchy json", required=True)
+    parser.add_argument("--ignore", dest='ignorelist', type=str, default=None, help="File listing rules which matching files should be hidden from the preview", required=False)
 
     args = parser.parse_args()
     main(args)

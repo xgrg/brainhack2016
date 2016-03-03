@@ -208,6 +208,7 @@
                 $("#rulesOne div.panel-body").html(data);
                 $("#checkrules").click(checkrules);
                 $("#validate").click(validate);
+                $("#save").click(save);
                 $(".loadopenfmri").click( loadopenfmri);
                 $(".loadfreesurfer").click( loadfreesurfer);
                 $(".loadmorpho").click( loadmorpho);
@@ -216,7 +217,7 @@
           });
        };
        function validate(evt){
-            var params = {validate:true};
+            var params = {validate:"validate"};
             $("#loading-image").show();
             $.ajax({
                  type: "POST",
@@ -230,6 +231,20 @@
                  },
                });
 
+       };
+       function save(evt){
+            var params = {validate:"save"};
+            $.ajax({
+                 type: "POST",
+                 url: 'validate',
+                 data: params,
+                 success: function(data){
+                     alert("saved.");
+
+                  },
+                 complete: function(){
+                 },
+               });
        };
 
        // On first inputbox keypress event
@@ -303,6 +318,7 @@
                 $(".loadmorpho").click( loadmorpho);
                 $("#checkrules").click(checkrules);
                 $("#validate").click(validate);
+                $("#save").click(save);
              }
           });
        };
@@ -321,6 +337,7 @@
                 $(".loadmorpho").click( loadmorpho);
                 $("#checkrules").click(checkrules);
                 $("#validate").click(validate);
+                $("#save").click(save);
              }
           });
        };
@@ -339,6 +356,7 @@
                 $(".loadmorpho").click( loadmorpho);
                 $("#checkrules").click(checkrules);
                 $("#validate").click(validate);
+                $("#save").click(save);
              }
           });
        };
@@ -358,6 +376,7 @@
                 $(".loadfreesurfer").click( loadfreesurfer);
                 $("#checkrules").click(checkrules);
                 $("#validate").click(validate);
+                $("#save").click(save);
              }
           });
        };
@@ -422,6 +441,7 @@
        $(".loadmorpho").click( loadmorpho);
        $(".loadjson").click(loadjson);
        $("#validate").click(validate);
+       $("#save").click(save);
     });
 
     </script>
