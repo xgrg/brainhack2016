@@ -17,7 +17,13 @@ class Engine():
     def __init__(self, repository, jsonfile, ignorelist=[], maxitems = 500):
         self.repository = osp.abspath(repository)
         self.jsonfile = osp.abspath(jsonfile)
-        self.hierarchy = json.load(open(self.jsonfile))
+        if osp.isfile(self.jsonfile):
+            j = json.load(open(self.jsonfile))
+        else:
+            j = {}
+            print 'Creating %s'%self.jsonfile
+            json.dump(j, open(self.jsonfile, 'w'))
+        self.hierarchy = j
         self.maxitems = maxitems
         self.ignorelist = ignorelist
 
@@ -328,7 +334,8 @@ class MainHandler(BaseHandler):
                     ignorelist = self.engine.ignorelist,
                     maxitems = self.engine.maxitems)
         html = self.engine.get_repository_section()
-        self.render("html/index.html", repository = html)
+        h = self.engine.hierarchy_to_html()
+        self.render("html/index.html", repository = html, hierarchy = h)
 
 
 def parsefilepath(filepath, patterns):
