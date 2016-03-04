@@ -55,7 +55,7 @@ class Inventory():
        self.count_table = []
        self.table = []
        self.firstcol = self.identified.keys()
-       for s in firstcol:
+       for s in self.firstcol:
           self.count_table.append([len(self.identified[s].get(e, [])) for e in self.headers])
           self.table.append([self.identified[s].get(e, []) for e in self.headers])
 
