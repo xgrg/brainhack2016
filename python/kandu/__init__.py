@@ -38,6 +38,10 @@ class Inventory():
        self.repository = repository
        self.rules = rules
 
+   def to_html(self):
+       if not hasattr(self, 'identified'):
+          raise Exception('run Inventory.run() first')
+
    def run(self, firstcol='subject'):
        print 'Inventory of %s in progress... This operation may be long.'%self.repository
        print 'Rules:'
@@ -51,6 +55,7 @@ class Inventory():
        for each in [e.keys() for k,e in self.identified.items()]:
           for e in each:
               self.headers.add(e)
+       self.headers = list(self.headers)
 
        self.count_table = []
        self.table = []
@@ -58,16 +63,3 @@ class Inventory():
        for s in self.firstcol:
           self.count_table.append([len(self.identified[s].get(e, [])) for e in self.headers])
           self.table.append([self.identified[s].get(e, []) for e in self.headers])
-
-
-
-
-def inventory_table(repository, rules, firstcol = 'subject'):
-
-
-    #stats = len(identified.items()) / float((len(unknown) + len(identified.items()))) * 100.0
-    inv = Inventory(firstcol=firstcol, headers=headers, count_table=count_table, table=table, unknown=unknown)
-    return inv
-
-
-
