@@ -146,7 +146,6 @@
     <!-- Placed at the end of the document so the pages load faster -->
     <script>
     $(document).ready(function(){
-       $("div#repository a.btn").click(clickfile);
 
        function assign_rule(evt){
           console.log($(this).closest("div.btn-group"));
@@ -437,6 +436,34 @@
              }
           });
        };
+       function togglepreview(e){
+          isActive = $(this).hasClass('active');
+          if (isActive){
+            isActive = '0';
+          }
+          else {
+            isActive = '1';
+          }
+          $.ajax({'url': 'togglepreview',
+             'type': 'get',
+             'data': 'unknown_only='+isActive,
+             'success': function(data){
+                $("div#repository").html(data);
+                $("div#repository a.btn").click(clickfile);
+                $(".loadopenfmri").click( loadopenfmri);
+                $(".loadfreesurfer").click( loadfreesurfer);
+                $(".loadmorpho").click( loadmorpho);
+                $(".loadjson").click(loadjson);
+                $("#validate").click(validate);
+                $("#save").click(save);
+                $("#checkrules").click(checkrules);
+                $("#togglepreview").click(togglepreview);
+             }
+          });
+
+       };
+
+       $("div#repository a.btn").click(clickfile);
        $(".loadopenfmri").click( loadopenfmri);
        $(".loadfreesurfer").click( loadfreesurfer);
        $(".loadmorpho").click( loadmorpho);
@@ -444,6 +471,9 @@
        $("#validate").click(validate);
        $("#save").click(save);
        $("#checkrules").click(checkrules);
+       $("#togglepreview").click(togglepreview);
+
+
     });
 
     </script>

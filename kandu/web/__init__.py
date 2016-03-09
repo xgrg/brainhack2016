@@ -14,7 +14,7 @@ from tornado.options import define, options
 define("port", default=8888, help="run on the given port", type=int)
 
 class Engine():
-    def __init__(self, repository, jsonfile, ignorelist=[], maxitems = 500):
+    def __init__(self, repository, jsonfile, ignorelist=[], maxitems = 500, unknown_only=False):
         self.repository = osp.abspath(repository)
         self.jsonfile = osp.abspath(jsonfile)
         if osp.isfile(self.jsonfile):
@@ -26,6 +26,7 @@ class Engine():
         self.hierarchy = j
         self.maxitems = maxitems
         self.ignorelist = ignorelist
+        self.unknown_only = unknown_only
 
     def check_repository(self):
         unknown = []
@@ -50,6 +51,17 @@ class Engine():
 
 
     def get_repository_section(self):
+
+        ignorelist = []
+        ignorelist.extend(self.ignorelist)
+
+        if self.unknown_only:
+            u1 = 'active'
+            u2 = 'checked'
+            ignorelist.extend(self.hierarchy.keys())
+        else:
+            u1 = ''
+            u2 = ''
         html = '''<div class="btn-group">
                   <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     Load preset <span class="caret"></span>
@@ -61,17 +73,26 @@ class Engine():
                     <li class="loadjson"><a href="#">Load from %s</a></li>
                   </ul>
                 </div>
+                <div class="btn-group" data-toggle="buttons">
+                 <label id="togglepreview" class="btn btn-primary %s">
+                   <input type="checkbox" autocomplete="off" %s>Hide matched items
+                 </label>
+                </div>
                 <br><br>
-                '''%self.jsonfile
-        j = self.get_n_first_files(self.repository, n=self.maxitems)
+                '''%(self.jsonfile, u1, u2)
+
+        j = self.get_n_first_files(self.repository, n=self.maxitems, ignorelist=ignorelist)
+
         if len(self.ignorelist) != 0:
             html += 'Files matching following rules are not displayed : %s<br><br>'%', '.join([e for e in self.ignorelist if e in self.hierarchy])
+        if self.unknown_only:
+            html += 'Files matching rules are not displayed<br><br>'
         html += ''.join(['<a data-path="%s" class="btn btn-default btn-xs" role="button">%s</a><br>'\
             %(fp, fp[len(self.repository)+1:]) for fp in j])
         html += '%s items max. displayed'%self.maxitems
         return html
 
-    def get_n_first_files(self, repo, n=100):
+    def get_n_first_files(self, repo, n=100, ignorelist=[]):
         all_files = []
 
         for root, dirs, files in os.walk(repo):
@@ -80,7 +101,7 @@ class Engine():
                 res = parsefilepath(fp, self.hierarchy)
                 if res:
                     datatype, att = res
-                    if datatype in self.ignorelist: continue
+                    if datatype in ignorelist: continue
 
                 all_files.append(fp)
                 if len(all_files) == n:
@@ -329,14 +350,30 @@ class SendTextHandler(BaseHandler):
 
 class MainHandler(BaseHandler):
     def get(self):
+        unknown_only = self.get_argument('unknown_only', '0')
+        print unknown_only
+
         self.engine = Engine(repository = self.engine.repository,
                     jsonfile = self.engine.jsonfile,
                     ignorelist = self.engine.ignorelist,
-                    maxitems = self.engine.maxitems)
+                    maxitems = self.engine.maxitems,
+                    unknown_only = {'0':False, '1':True}[unknown_only])
         html = self.engine.get_repository_section()
         h = self.engine.hierarchy_to_html()
         self.render("html/index.html", repository = html, hierarchy = h)
 
+class ToggleHandler(BaseHandler):
+    def get(self):
+        unknown_only = self.get_argument('unknown_only', '0')
+        print unknown_only
+
+        self.engine = Engine(repository = self.engine.repository,
+                    jsonfile = self.engine.jsonfile,
+                    ignorelist = self.engine.ignorelist,
+                    maxitems = self.engine.maxitems,
+                    unknown_only = {'0':False, '1':True}[unknown_only])
+        html = self.engine.get_repository_section()
+        self.write(html)
 
 def parsefilepath(filepath, patterns):
   ''' Matches a filepath with a set of regex given as a dictionary named patterns.
@@ -407,10 +444,12 @@ class Application(tornado.web.Application):
             (r"/validate", ValidateHandler, {'engine': engine} ),
             (r"/addrule", SendTextHandler, {'engine': engine} ),
             (r"/preset", PresetHandler, {'engine': engine} ),
+            (r"/togglepreview", ToggleHandler, {'engine': engine} ),
             ]
-        dirname = '/'.join(__file__.split('/')[:-4])
-        template_path = osp.join(dirname, 'web')
-        static_path = osp.join(dirname, 'web')
+        import kandu
+        dirname = osp.dirname(kandu.__file__)
+        template_path = osp.join(dirname, 'web', 'static')
+        static_path = osp.join(dirname, 'web', 'static')
         s = {
             "template_path":template_path,
             "static_path":static_path
@@ -429,15 +468,3 @@ def main(args):
     http_server.listen(args.port)
     tornado.ioloop.IOLoop.instance().start()
 
-if __name__ == '__main__':
-    import sys
-    import argparse
-    parser = argparse.ArgumentParser(description='Runs the web server')
-    parser.add_argument("--port", help="Port", default=8888, required=False)
-    parser.add_argument("--max-preview", dest='maxitems', default=500, type=int, help="How many files to preview", required=False)
-    parser.add_argument("--repository", dest='repository', type=str, help="Repository folder", required=True)
-    parser.add_argument("--hierarchy", dest='jsonfile', type=str, help="Output hierarchy json", required=True)
-    parser.add_argument("--ignore", dest='ignorelist', type=str, default=None, help="File listing rules which matching files should be hidden from the preview", required=False)
-
-    args = parser.parse_args()
-    main(args)

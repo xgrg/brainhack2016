@@ -1,17 +1,11 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 import os.path as osp
 import os
 
 def parsefilepath(filepath, patterns):
   ''' Matches a filepath with a set of regex given as a dictionary named patterns.
-  Returns the key name of the successfully matched pattern, and the identified attributes
-  ex : c.parsefilepath('/neurospin/cati/Users/reynal/BVdatabase/Paris/CHBR/t1mri/raw/CHBR.nii')
-  ('raw',
-     {'acquisition': 'raw',
-     'database': '/neurospin/cati/Users/reynal/BVdatabase',
-     'extension': 'nii',
-     'group': 'Paris',
-     'modality': 't1mri',
-     'subject': 'CHBR'}) '''
+  Returns the key name of the successfully matched pattern, and the identified attributes'''
   import re, os
   for datatype, path in patterns.items():
     m = re.match(r"%s"%path, filepath)
@@ -63,3 +57,4 @@ class Inventory():
        for s in self.firstcol:
           self.count_table.append([len(self.identified[s].get(e, [])) for e in self.headers])
           self.table.append([self.identified[s].get(e, []) for e in self.headers])
+
