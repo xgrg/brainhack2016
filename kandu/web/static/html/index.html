@@ -1,31 +1,31 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-       {% include "header.html" %}
-    </head>
-    <body>
-       <img id="loading-image" src="{{ static_url("images/loader.gif") }}" style="position:fixed; left:50%; top:50%; display:none; z-index:1000">
+   <head>
+      {% include "header.html" %}
+   </head>
+   <body>
+      <img id="loading-image" src="{{ static_url("images/loader.gif") }}" style="position:fixed; left:50%; top:50%; display:none; z-index:1000">
 
-       {% include "nav.html" %}
+      {% include "nav.html" %}
 
-    <div class="container">
-      <br>
-       {% include "panels/preview.html" %}
-      <hr>
-       {% include "panels/identify.html" %}
-      <hr>
-       {% include "panels/rules.html" %}
-      <hr>
-       {% include "panels/results.html" %}
+      <div class="container">
+         <br>
+         {% include "panels/preview.html" %}
+         <hr>
+         {% include "panels/identify.html" %}
+         <hr>
+         {% include "panels/rules.html" %}
+         <hr>
+         {% include "panels/results.html" %}
 
-      <footer>
-        <p>&copy; 2016 kandu, Inc.</p>
-      </footer>
-    </div> <!-- /container -->
+         <footer>
+            <p>&copy; 2016 kandu, Inc.</p>
+         </footer>
+      </div> <!-- /container -->
 
-    <script>
-       {% include "../js/document.js" %}
-    </script>
-  </body>
+      <script>
+{% include "../js/document.js" %}
+      </script>
+   </body>
 </html>
 
