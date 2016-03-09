@@ -7,16 +7,15 @@ Kandu wants to help with the complex file trees, that make the data impossible t
   - perform a full check over a repository
 
 ### Version
-still in development
+pre-alpha 1.0
 
-### Run
+### Usage
 
 Kandu runs a Python web server ([Tornado]) in order to give access to the interface on http://localhost:8888 (default port). Having an Anaconda distribution is a simple way to get operational.
 
 ```sh
-$ git clone git@github.com:xgrg/kandu.git kandu
-$ cd kandu
-$ ./bin/run_web_server.sh --repository /path/to/repo --hierarchy /path/to/output.json
+$ pip install kandu
+$ kandu_server --repository /path/to/repo --hierarchy /path/to/output.json
 ```
 Then open a browser at http://localhost:8888.
 
