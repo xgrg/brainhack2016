@@ -139,7 +139,7 @@ $(document).ready(function(){
    function scrollTo(id){
             $('html, body').animate({
                scrollTop: $(id).offset().top
-            }, 2000);
+            }, 500);
    }
 
    function reloadRules(data){
