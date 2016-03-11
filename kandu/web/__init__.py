@@ -9,126 +9,11 @@ import os
 import json
 import string
 from kandu import parsefilepath
+from kandu.web.engine import Engine
 
 from tornado.options import define, options
 
 define("port", default=8888, help="run on the given port", type=int)
-
-class Engine():
-    def __init__(self, repository, jsonfile, ignorelist=[], maxitems = 500, unknown_only=False):
-        self.repository = osp.abspath(repository)
-        self.jsonfile = osp.abspath(jsonfile)
-        if osp.isfile(self.jsonfile):
-            j = json.load(open(self.jsonfile))
-        else:
-            j = {}
-            print 'Creating %s'%self.jsonfile
-            json.dump(j, open(self.jsonfile, 'w'))
-        self.hierarchy = j
-        self.maxitems = maxitems
-        self.ignorelist = ignorelist
-        self.unknown_only = unknown_only
-
-    def check_repository(self):
-        unknown = []
-        identified = {}
-        allatt = {}
-        for root, dirs, files in os.walk(self.repository):
-            for f in files:
-                fp = osp.join(root, f)
-                res = parsefilepath(fp, self.hierarchy)
-                if not res is None:
-                    datatype, att = res
-                    identified[fp] = datatype
-                    for k,v in att.items():
-                       allatt.setdefault(k, []).append(v)
-                else:
-                    unknown.append(fp[len(self.repository)+1:])
-        res = {'unknown' : unknown,
-               'identified': identified,
-               'labels': allatt}
-        print 'done'
-        return res
-
-    def get_n_first_files(self, repo, n=100, ignorelist=[]):
-        all_files = []
-
-        for root, dirs, files in os.walk(repo):
-            for f in files:
-                fp = osp.join(root, f)
-                res = parsefilepath(fp, self.hierarchy)
-                if res:
-                    datatype, att = res
-                    if datatype in ignorelist: continue
-
-                all_files.append(fp)
-                if len(all_files) == n:
-                    return all_files
-        return all_files
-
-    def slash_split(self, path):
-        bits = path[len(self.repository)+1:].split('/')
-        self.bits = []
-        self.rules = []
-        for each in bits[:-1]:
-            self.bits.append(each)
-            self.bits.append('/')
-        self.bits.append(bits[-1])
-        for e in self.bits:
-            self.rules.append('')
-
-    def correct_index(self, i):
-        # correct i according to '/' and '_'
-        print 'before correction', i
-
-        cpt = 0
-        j = i
-        for each in self.bits:
-            if cpt == j:
-                break
-            if not each in ['/', '_']:
-                cpt += 1
-                i += 1
-        print 'i corrected', i
-        return i
-
-    def underscore_split(self, i):
-        i = self.correct_index(i)
-
-        bits = self.bits[:i]
-        rules = self.rules[:i]
-
-        s = self.bits[i].split('_')
-        for each in s[:-1]:
-            bits.append(each)
-            bits.append('_')
-            rules.append('')
-            rules.append('')
-        bits.append(s[-1])
-        rules.append('')
-        bits.extend(self.bits[i+1:])
-        rules.extend(self.rules[i+1:])
-        self.bits = bits
-        self.rules = rules
-
-    def build_path_from_bits(self):
-        bits = []
-        processed = []
-        for b,r in zip(self.bits, self.rules):
-            if r == '':
-                # explicit
-                bits.append(b)
-            elif r != '' and not b in processed:
-                # variable definition (every char except / and _)
-                bits.append('(?P<%s>[^/]+)'%r)
-                processed.append(b)
-            elif r != '' and b in processed:
-                # variable repetition
-                bits.append('(?P=%s)'%r)
-
-        return '^'+osp.join(self.repository, ''.join(bits))+'$'
-
-
 
 class BaseHandler(tornado.web.RequestHandler):
     def initialize(self, engine):
@@ -138,7 +23,7 @@ class BaseHandler(tornado.web.RequestHandler):
         html = ''
         processed = []
         for each, r in zip(self.engine.bits, self.engine.rules):
-            if each in ['/', '_']:
+            if each in self.engine.separators: #['/', '_']:
                 html += ' %s '%each
             else:
                 if r == '':
@@ -154,8 +39,7 @@ class BaseHandler(tornado.web.RequestHandler):
             hierarchy = self.engine.hierarchy
         return self.render_string('html/hierarchy_body.html', jsonfile = self.engine.jsonfile, hierarchy = hierarchy, repository = self.engine.repository)
 
-
-    def get_repository_section(self):
+    def get_preview_section(self):
 
         ignorelist = []
         ignorelist.extend(self.engine.ignorelist)
@@ -182,9 +66,11 @@ class BaseHandler(tornado.web.RequestHandler):
 class SplitHandler(BaseHandler):
     def post(self):
         i = self.get_argument('i')
-        self.engine.underscore_split(string.atoi(i))
+        for sep in self.engine.separators:
+           self.engine.oversplit(string.atoi(i), sep)
         path = self.engine.path
         html = '<span id="path">%s</span><br>'%(path)
+        html += self.engine.repository
         html += self.bits_to_html()
         self.write(html);
 
@@ -193,8 +79,7 @@ class PresetHandler(BaseHandler):
         from kandu import patterns as p
         preset = self.get_argument('p')
         if preset == 'loadopenfmri':
-            h = {'raw': os.path.join(self.engine.repository, '(?P<subject>\w+)', '(?P<session>\w+)', 'anatomy', '(?P=subject)_T1w.nii.gz$')}
-            self.engine.hierarchy.update(h)
+            self.engine.hierarchy.update(p.set_repository(p.openfmri, self.engine.repository))
         elif preset == 'loadjson':
             print self.engine.jsonfile
             self.engine.hierarchy.update(json.load(open(self.engine.jsonfile)))
@@ -225,7 +110,9 @@ class IdentifyHandler(BaseHandler):
     def post(self):
         path = self.get_argument('path')
         self.engine.path = path
+        print path
         self.engine.slash_split(path)
+        print self.engine.bits
         html = '<span id="path">%s</span><br>%s'%(path, path[:len(self.engine.repository)])
         html += self.bits_to_html()
         self.write(html);
@@ -244,29 +131,25 @@ class SendTextHandler(BaseHandler):
 
 class MainHandler(BaseHandler):
     def get(self):
-        unknown_only = self.get_argument('unknown_only', '0')
-        print unknown_only
-
         self.engine = Engine(repository = self.engine.repository,
                     jsonfile = self.engine.jsonfile,
                     ignorelist = self.engine.ignorelist,
                     maxitems = self.engine.maxitems,
-                    unknown_only = {'0':False, '1':True}[unknown_only])
-        html = self.get_repository_section()
+                    unknown_only = False)
+
+        html = self.get_preview_section()
         h = self.hierarchy_to_html()
         self.render("html/index.html", repository = html, hierarchy = h)
 
 class ToggleHandler(BaseHandler):
     def get(self):
         unknown_only = self.get_argument('unknown_only', '0')
-        print unknown_only
-
         self.engine = Engine(repository = self.engine.repository,
                     jsonfile = self.engine.jsonfile,
                     ignorelist = self.engine.ignorelist,
                     maxitems = self.engine.maxitems,
                     unknown_only = {'0':False, '1':True}[unknown_only])
-        html = self.get_repository_section()
+        html = self.get_preview_section()
         self.write(html)
 
 
@@ -305,7 +188,7 @@ class ValidateHandler(BaseHandler):
 
         res = {'valid':valid,
                'labels': labels,
-               'repo': self.get_repository_section()}
+               'repo': self.get_preview_section()}
         html = json.dumps(res)
 
         self.write(html);
@@ -341,7 +224,8 @@ def main(args):
     engine = Engine(repository = args.repository,
                     jsonfile = args.jsonfile,
                     ignorelist = ignorelist,
-                    maxitems = args.maxitems)
+                    maxitems = args.maxitems,
+                    separators = args.separators)
     http_server = tornado.httpserver.HTTPServer(Application(engine))
     http_server.listen(args.port)
     tornado.ioloop.IOLoop.instance().start()

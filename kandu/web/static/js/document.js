@@ -28,8 +28,8 @@ $(document).ready(function(){
       }
    };
    function split(evt){
-      console.log($("div.btn-group").index($(this).closest("div.btn-group")));
-      var i = $("div.btn-group").index($(this).closest("div.btn-group"));
+      console.log($("div.bit").index($(this).closest("div.bit")));
+      var i = $("div.bit").index($(this).closest("div.bit"));
 
       $.ajax({'url': 'split',
          'type': 'POST',
@@ -207,9 +207,7 @@ $(document).ready(function(){
                   $(this).css('background-color', '#aaaaaa');
                   $(this).after("<span> -- " + labels[index] + "</span>");
                }
-
             });
-
             connectPreviewBtn();
          }
       });
