@@ -1,5 +1,10 @@
+dependencies:
+     pre:
+            - pip install requests
 test:
+  pre:
+     - bin/kandu_server --repository kandu/tests/test_data/BVdatabase --hierarchy /tmp/hierarchy.json :
+        background: true
+     - sleep 5
   override:
-     - kandu_server --repository /home/ubuntu/kandu/kandu/tests/test_data/BVdatabase --hierarchy /tmp/hierarchy.json
-           background: true
      - nosetests kandu
