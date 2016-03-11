@@ -2,17 +2,18 @@ import os.path as osp
 import os, json
 import string
 from kandu import parsefilepath
+from kandu import patterns as p
 
 class Engine():
     def __init__(self, repository, jsonfile, ignorelist=[], maxitems = 500, unknown_only=False, separators='_'):
         self.repository = osp.abspath(repository)
         self.jsonfile = osp.abspath(jsonfile)
         if osp.isfile(self.jsonfile):
-            j = json.load(open(self.jsonfile))
+            j = p.set_repository(json.load(open(self.jsonfile)), self.repository)
         else:
             j = {}
             print 'Creating %s'%self.jsonfile
-            json.dump(j, open(self.jsonfile, 'w'))
+            json.dump(p.strip_repository(j, self.repository), open(self.jsonfile, 'w'))
         self.hierarchy = j
         self.maxitems = maxitems
         self.ignorelist = ignorelist
@@ -27,6 +28,7 @@ class Engine():
            raise Exception('no valid separators given in %s (allowed : %s)'%(separators, ' '.join(allowed_sep)))
 
         self.separators = kept_sep
+        self.separators.append('/')
 
     def check_repository(self):
         unknown = []
@@ -51,6 +53,7 @@ class Engine():
 
     def get_n_first_files(self, repo, n=100, ignorelist=[]):
         all_files = []
+        print self.hierarchy
 
         for root, dirs, files in os.walk(repo):
             for f in files:

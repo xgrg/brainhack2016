@@ -66,10 +66,13 @@ class BaseHandler(tornado.web.RequestHandler):
 class SplitHandler(BaseHandler):
     def post(self):
         i = self.get_argument('i')
+        nbits = len(self.engine.bits)
         for sep in self.engine.separators:
+           print 'splitting', sep
+           if len(self.engine.bits) != nbits:
+              break
            self.engine.oversplit(string.atoi(i), sep)
-        path = self.engine.path
-        html = '<span id="path">%s</span><br>'%(path)
+        html = '<span id="path">%s</span><br>'%(self.engine.path)
         html += self.engine.repository
         html += self.bits_to_html()
         self.write(html);
@@ -82,7 +85,7 @@ class PresetHandler(BaseHandler):
             self.engine.hierarchy.update(p.set_repository(p.openfmri, self.engine.repository))
         elif preset == 'loadjson':
             print self.engine.jsonfile
-            self.engine.hierarchy.update(json.load(open(self.engine.jsonfile)))
+            self.engine.hierarchy.update(p.set_repository(json.load(open(self.engine.jsonfile)), self.engine.repository))
         elif preset == 'loadfreesurfer':
             self.engine.hierarchy.update(p.set_repository(p.freesurfer, self.engine.repository))
         elif preset == 'loadmorpho':
@@ -155,18 +158,26 @@ class ToggleHandler(BaseHandler):
 
 class ValidateHandler(BaseHandler):
     def post(self):
-        valid = []
-        labels = []
 
         if 'files[]' in self.request.arguments:
+            labels = []
+            valid = []
             files = self.get_arguments('files[]')
             selected = self.get_arguments('selected[]')
             h = dict([(e, self.engine.hierarchy[e]) for e in selected])
+            print h
             for fp in files:
                 res = parsefilepath(fp, h)
                 if not res is None:
                     valid.append(fp)
                     labels.append(res[0])
+            res = {'valid':valid,
+                  'labels': labels,
+                  'repo': self.get_preview_section()}
+            html = json.dumps(res)
+
+            self.write(html);
+            return
 
         else:
             action = self.get_argument('validate')
@@ -183,15 +194,10 @@ class ValidateHandler(BaseHandler):
                 self.write(html)
             elif action == 'save':
                 print 'saved'
-                json.dump(self.engine.hierarchy, open(self.engine.jsonfile, 'w'), indent=2)
+                from kandu import patterns as p
+                json.dump(p.strip_repository(self.engine.hierarchy, self.engine.repository), open(self.engine.jsonfile, 'w'), indent=2)
             return
 
-        res = {'valid':valid,
-               'labels': labels,
-               'repo': self.get_preview_section()}
-        html = json.dumps(res)
-
-        self.write(html);
 
 class Application(tornado.web.Application):
     def __init__(self, engine):
