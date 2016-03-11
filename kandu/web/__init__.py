@@ -13,8 +13,6 @@ from kandu.web.engine import Engine
 
 from tornado.options import define, options
 
-define("port", default=8888, help="run on the given port", type=int)
-
 class BaseHandler(tornado.web.RequestHandler):
     def initialize(self, engine):
         self.engine = engine
