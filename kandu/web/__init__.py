@@ -192,16 +192,19 @@ class PresetHandler(BaseHandler):
     def post(self):
         from kandu import patterns as p
         preset = self.get_argument('p')
-        if preset == 'openfmri':
+        if preset == 'loadopenfmri':
             h = {'raw': os.path.join(self.engine.repository, '(?P<subject>\w+)', '(?P<session>\w+)', 'anatomy', '(?P=subject)_T1w.nii.gz$')}
             self.engine.hierarchy.update(h)
-        elif preset == 'json':
+        elif preset == 'loadjson':
             print self.engine.jsonfile
             self.engine.hierarchy.update(json.load(open(self.engine.jsonfile)))
-        elif preset == 'freesurfer':
-            self.engine.hierarchy.update(p.set_repository(p.freesurfer))
-        elif preset == 'morphologist':
-            self.engine.hierarchy.update(p.set_repository(p.morphologist))
+        elif preset == 'loadfreesurfer':
+            self.engine.hierarchy.update(p.set_repository(p.freesurfer, self.engine.repository))
+        elif preset == 'loadmorpho':
+            self.engine.hierarchy.update(p.set_repository(p.morphologist, self.engine.repository))
+        elif preset == 'reset':
+            self.engine.hierarchy = {}
+
         html = self.hierarchy_to_html()
         self.write(html)
 

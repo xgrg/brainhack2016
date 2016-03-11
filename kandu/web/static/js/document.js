@@ -2,11 +2,9 @@
 $(document).ready(function(){
 
    function assign_rule(evt){
-      console.log($(this).closest("div.btn-group"));
       console.log($("#identify div.btn-group").index($(this).closest("div.btn-group")));
       var i = $("#identify div.btn-group").index($(this).closest("div.btn-group"));
       var v = $("#ie1").val();
-      console.log(v);
       if (v != ''){
          // Rule has a name: we can assign the rule to the item
          $.ajax({'url': 'setrule',
@@ -14,9 +12,7 @@ $(document).ready(function(){
             'data': 'i='+i+"&v="+v,
             'success': function(data){
                $("div#identify").html(data);
-               $("ul.dropdown-menu").dropdown();
-               $("li.assign").click(assign_rule);
-               $("li.split").click(split);
+               connectBitsBtn();
                $("#ie1").val('');
             }
          });
@@ -25,16 +21,13 @@ $(document).ready(function(){
          // Rule has no name: we shift to the inputbox to ask for a name
          // and pop the popover
          console.log("no rule name");
-         $('html, body').animate({
-            scrollTop: $("#varinputdiv").offset().top
-         }, 2000);
+         scrollTo('#varinputdiv');
          $("#varinputdiv").addClass("has-feedback");
          $("#varinputdiv").addClass("has-error");
 
       }
    };
    function split(evt){
-      console.log($(this));
       console.log($("div.btn-group").index($(this).closest("div.btn-group")));
       var i = $("div.btn-group").index($(this).closest("div.btn-group"));
 
@@ -43,31 +36,25 @@ $(document).ready(function(){
          'data': 'i='+i,
          'success': function(data){
             $("div#identify").html(data);
-            $("ul.dropdown-menu").dropdown();
-            $("li.assign").click(assign_rule);
-            $("li.split").click(split);
+            connectBitsBtn();
          }
       });
    };
+
+   function connectBitsBtn(){
+            $("ul.dropdown-menu").dropdown();
+            $("li.assign").click(assign_rule);
+            $("li.split").click(split);
+            $("li.addrule").click(addrule);
+   };
+
    function addrule(evt){
       var i = $("#ie2").val();
 
       $.ajax({'url': 'addrule',
          'type': 'POST',
          'data': 'text='+i,
-         'success': function(data){
-            $('html, body').animate({
-               scrollTop: $("#rulesOne").offset().top
-            }, 2000);
-            $("#rulesOne div.panel-body").html(data);
-            $("#checkrules").click(checkrules);
-            $("#validate").click(validate);
-            $("#save").click(save);
-            $(".loadopenfmri").click( loadopenfmri);
-            $(".loadfreesurfer").click( loadfreesurfer);
-            $(".loadmorpho").click( loadmorpho);
-            $(".loadjson").click(loadjson);
-         }
+         'success': reloadRules
       });
    };
    function validate(evt){
@@ -94,10 +81,7 @@ $(document).ready(function(){
          data: params,
          success: function(data){
             alert("saved.");
-
-         },
-         complete: function(){
-         },
+         }
       });
    };
 
@@ -109,8 +93,7 @@ $(document).ready(function(){
       else {
          $("li.assign").html('<a href="#">Set rule</a>');
       }
-      if(e.keyCode == 13)
-      {
+      if(e.keyCode == 13) {
          $(this).trigger("enterKey");
       }
       if ($("#varinputdiv").hasClass('has-error')){
@@ -125,8 +108,7 @@ $(document).ready(function(){
          $("#ruleinputdiv").removeClass('has-feedback');
          $("#ruleinputdiv").removeClass('has-error');
       }
-      if(e.keyCode == 13)
-      {
+      if(e.keyCode == 13) {
          $('#addrule').click();
       }
    });
@@ -136,17 +118,13 @@ $(document).ready(function(){
       var length = $("div#identify").children('div.btn-group').length;
       if (length == 0){
 
-         $('html, body').animate({
-            scrollTop: $("#repository").offset().top
-         }, 2000);
+         scrollTo('#repository');
          $("#ie2").val("");
       }
       else if ($("#ie2").val() == ''){
 
          // if no rule name provided
-         $('html, body').animate({
-            scrollTop: $("#ruleinputdiv").offset().top
-         }, 2000);
+         scrollTo("#ruleinputdiv");
          $("#ruleinputdiv").addClass("has-feedback");
          $("#ruleinputdiv").addClass("has-error");
       }
@@ -157,83 +135,47 @@ $(document).ready(function(){
       }
 
    });
-   function loadopenfmri(e){
-      $.ajax({'url': 'preset',
-         'type': 'POST',
-         'data': 'p=openfmri',
-         'success':function(data){
-            $("#rulesOne div.panel-body").html(data);
+
+   function scrollTo(id){
             $('html, body').animate({
-               scrollTop: $("#rulesOne").offset().top
+               scrollTop: $(id).offset().top
             }, 2000);
-            $(".loadjson").click(loadjson);
-            $(".loadopenfmri").click( loadopenfmri);
-            $(".loadfreesurfer").click( loadfreesurfer);
-            $(".loadmorpho").click( loadmorpho);
-            $("#checkrules").click(checkrules);
-            $("#validate").click(validate);
-            $("#save").click(save);
-         }
-      });
+   }
+
+   function reloadRules(data){
+            $("#rulesOne div.panel-body").html(data);
+            connectRulesBtn();
+            scrollTo('#rulesOne');
    };
-   function loadfreesurfer(e){
-      $.ajax({'url': 'preset',
-         'type': 'POST',
-         'data': 'p=freesurfer',
-         'success':function(data){
-            $("#rulesOne div.panel-body").html(data);
-            $('html, body').animate({
-               scrollTop: $("#rulesOne").offset().top
-            }, 2000);
-            $(".loadjson").click(loadjson);
-            $(".loadopenfmri").click( loadopenfmri);
-            $(".loadfreesurfer").click( loadfreesurfer);
-            $(".loadmorpho").click( loadmorpho);
-            $("#checkrules").click(checkrules);
-            $("#validate").click(validate);
-            $("#save").click(save);
-         }
-      });
+
+   function connectLoadPresetsBtn(){
+            $(".loadjson").click(loadPreset);
+            $(".loadopenfmri").click(loadPreset);
+            $(".loadfreesurfer").click(loadPreset);
+            $(".loadmorpho").click(loadPreset);
+            $(".reset").click(loadPreset);
    };
-   function loadmorpho(e){
-      $.ajax({'url': 'preset',
-         'type': 'POST',
-         'data': 'p=morphologist',
-         'success':function(data){
-            $("#rulesOne div.panel-body").html(data);
-            $('html, body').animate({
-               scrollTop: $("#rulesOne").offset().top
-            }, 2000);
-            $(".loadjson").click(loadjson);
-            $(".loadopenfmri").click( loadopenfmri);
-            $(".loadfreesurfer").click( loadfreesurfer);
-            $(".loadmorpho").click( loadmorpho);
+
+   function connectRulesBtn(){
             $("#checkrules").click(checkrules);
             $("#validate").click(validate);
             $("#save").click(save);
-         }
+            connectLoadPresetsBtn();
+   }
+   function connectPreviewBtn(){
+      $("#togglepreview").click(togglepreview);
+      $("div#repository a.btn").click(clickfile);
+   }
+
+   function loadPreset(e){
+      cls = $(this).attr('class');
+      $.ajax({'url': 'preset',
+         'type': 'POST',
+         'data': 'p=' + cls,
+         'success': reloadRules
       });
    };
 
-   function loadjson(e){
-      console.log("loading json");
-      $.ajax({'url': 'preset',
-         'type': 'POST',
-         'data': 'p=json',
-         'success':function(data){
-            $("#rules").html(data);
-            $('html, body').animate({
-               scrollTop: $("#rulesOne").offset().top
-            }, 2000);
-            $(".loadjson").click(loadjson);
-            $(".loadopenfmri").click( loadopenfmri);
-            $(".loadfreesurfer").click( loadfreesurfer);
-            $("#checkrules").click(checkrules);
-            $("#validate").click(validate);
-            $("#save").click(save);
-         }
-      });
-   };
    function checkrules(e){
       var files = Array();
       var selected = Array();
@@ -267,26 +209,21 @@ $(document).ready(function(){
                }
 
             });
-            $("#repository a.btn").click(clickfile);
+
+            connectPreviewBtn();
          }
       });
-      $('html, body').animate({
-         scrollTop: $("#repository").offset().top
-      }, 2000);
+      scrollTo("#repository");
    };
+
    function clickfile(e){
       $.ajax({'url': 'identify',
          'type': 'POST',
          'data': 'path='+$(this).data('path'),
          'success': function(data){
             $("div#identify").html(data);
-            $("ul.dropdown-menu").dropdown();
-            $("li.assign").click(assign_rule);
-            $("li.split").click(split);
-            $("li.addrule").click(addrule);
-            $('html, body').animate({
-               scrollTop: $("#identify").offset().top
-            }, 2000);
+            connectBitsBtn();
+            scrollTo("#identify");
          }
       });
    };
@@ -303,29 +240,14 @@ $(document).ready(function(){
          'data': 'unknown_only='+isActive,
          'success': function(data){
             $("div#repository").html(data);
-            $("div#repository a.btn").click(clickfile);
-            $(".loadopenfmri").click( loadopenfmri);
-            $(".loadfreesurfer").click( loadfreesurfer);
-            $(".loadmorpho").click( loadmorpho);
-            $(".loadjson").click(loadjson);
-            $("#validate").click(validate);
-            $("#save").click(save);
-            $("#checkrules").click(checkrules);
-            $("#togglepreview").click(togglepreview);
+            connectPreviewBtn();
+
+            connectLoadPresetsBtn();
          }
       });
 
    };
 
-   $("div#repository a.btn").click(clickfile);
-   $(".loadopenfmri").click( loadopenfmri);
-   $(".loadfreesurfer").click( loadfreesurfer);
-   $(".loadmorpho").click( loadmorpho);
-   $(".loadjson").click(loadjson);
-   $("#validate").click(validate);
-   $("#save").click(save);
-   $("#checkrules").click(checkrules);
-   $("#togglepreview").click(togglepreview);
-
-
+   connectRulesBtn();
+   connectPreviewBtn();
 });

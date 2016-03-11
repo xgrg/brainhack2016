@@ -2,7 +2,16 @@ import os
 image_extensions = '(nii.gz|nii|ima|ima.gz)$'
 mesh_extensions = '(gii|mesh)$'
 
-freesurfers = {
+def parsefilepath(filepath, patterns):
+  ''' Matches a filepath with a set of regex given as a dictionary named patterns.
+  Returns the key name of the successfully matched pattern, and the identified attributes'''
+  import re, os
+  for datatype, path in patterns.items():
+    m = re.match(r"%s"%path, filepath)
+    if m:
+       return datatype, m.groupdict()
+
+freesurfer = {
       'nu' : os.path.join("^%s", '(?P<subject>\w+)', 'mri', 'nu.(?P<extension>%s)'%'[\w.]+$'), #image_extensions),
       'nu_noneck' : os.path.join("^%s", '(?P<subject>\w+)', 'mri', 'nu_noneck.(?P<extension>%s)'%'[\w.]+$'), #image_extensions),
       'norm' : os.path.join("^%s", '(?P<subject>\w+)', 'mri', 'norm.(?P<extension>%s)'%'[\w.]+$'), #image_extensions),

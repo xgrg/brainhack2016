@@ -2,15 +2,8 @@
 # -*- coding: utf-8 -*-
 import os.path as osp
 import os
+from kandu.patterns import parsefilepath
 
-def parsefilepath(filepath, patterns):
-  ''' Matches a filepath with a set of regex given as a dictionary named patterns.
-  Returns the key name of the successfully matched pattern, and the identified attributes'''
-  import re, os
-  for datatype, path in patterns.items():
-    m = re.match(r"%s"%path, filepath)
-    if m:
-       return datatype, m.groupdict()
 
 def check_repository(repository, rules, firstcol = 'subject'):
      unknown = []
