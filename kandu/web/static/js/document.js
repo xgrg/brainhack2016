@@ -157,14 +157,14 @@ $(document).ready(function(){
    };
 
    function connectRulesBtn(){
-            $("#checkrules").click(checkrules);
+            $("#checkrules").click(checkRules);
             $("#validate").click(validate);
             $("#save").click(save);
             connectLoadPresetsBtn();
    }
    function connectPreviewBtn(){
       $("#togglepreview").click(togglepreview);
-      $("div#repository a.btn").click(clickfile);
+      $("div#repository a.btn").click(clickFile);
    }
 
    function loadPreset(e){
@@ -176,7 +176,7 @@ $(document).ready(function(){
       });
    };
 
-   function checkrules(e){
+   function checkRules(e){
       var files = Array();
       var selected = Array();
       $("div#repository a.btn").each(function(){
@@ -187,34 +187,34 @@ $(document).ready(function(){
             selected.push($(this).data('rule'));
          }
       });
-      var params = {files:files,
-         selected:selected};
+      var params = { files:files,
+                     selected:selected };
       console.log(params);
       $.ajax({'url': 'validate',
          'type': 'POST',
          'data': params,
-         'success':function(data){
+         'success': function(data){
             var res = JSON.parse(data);
             var valid = res['valid'];
             var labels = res['labels'];
             var repo = res['repo'];
             $("#repository").html(repo);
-            $("#repository a.btn").each(function(){
+            $("#repository a.btn").each( function(){
                var path = $(this).data('path');
                var index = $.inArray(path, valid);
                console.log(index);
-               if (index != -1){
+               if (index != -1) {
                   $(this).css('background-color', '#aaaaaa');
                   $(this).after("<span> -- " + labels[index] + "</span>");
                }
             });
             connectPreviewBtn();
+            scrollTo("#repository");
          }
       });
-      scrollTo("#repository");
    };
 
-   function clickfile(e){
+   function clickFile(e){
       $.ajax({'url': 'identify',
          'type': 'POST',
          'data': 'path='+$(this).data('path'),
