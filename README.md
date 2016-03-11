@@ -1,5 +1,4 @@
-.. image:: https://circleci.com/gh/xgrg/kandu/tree/master.svg?style=shield&circle-token=:circle-token
-   :target: https://circleci.com/gh/xgrg/kandu/tree/master
+[![alt tag](https://circleci.com/gh/xgrg/kandu/tree/master.svg?style=shield&circle-token=:circle-token)](https://circleci.com/gh/xgrg/kandu/tree/master)
 
 # Kandu
 
