@@ -1,34 +1,22 @@
-
-<div class="panel-group" id="identify-panel" role="tablist" aria-multiselectable="true">
-   <div class="panel panel-default">
-      <div class="panel-heading" role="tab" id="headingOne">
-         <h4 class="panel-title">
-            <a role="button" data-toggle="collapse" data-parent="#accordion" href="#identifyOne" aria-expanded="true" aria-controls="identifyOne">
-               Identify
-            </a>
-         </h4>
-      </div>
-      <div id="identifyOne" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingOne">
-         <div class="panel-body">
-            <div id="identify">
-            </div>
-            <br>
-            <div id="varinputdiv" class="form-group">
-               <label class="control-label" for="ie1">Input a variable name</label>
-               <input type="text" class="form-control" id="ie1">
-               <span class="glyphicon glyphicon-remove form-control-feedback" aria-hidden="true"></span>
-            </div>
-         </div>
-         <div class="panel-body">
-            <div id="ruleinputdiv" class="form-group">
-               <label class="control-label" for="ie2">Input a rule name</label>
-               <input type="text" class="form-control" id="ie2">
-               <span class="glyphicon glyphicon-remove form-control-feedback" aria-hidden="true"></span>
-            </div>
-
-            <button id="addrule" type="button" class="btn btn-default">Add a rule</button>
-
-         </div>
-      </div>
+{% extends "panel.html" %}
+{% block title %}Identify {% end %}
+{% block panelid %}identify{%end%}
+{% block panelbody %}
+   <div id="identify">
    </div>
-</div>
+   <br>
+   <div id="varinputdiv" class="form-group">
+      <label class="control-label" for="ie1">Input a variable name</label>
+      <input type="text" class="form-control" id="ie1">
+      <span class="glyphicon glyphicon-remove form-control-feedback" aria-hidden="true"></span>
+   </div>
+   <hr>
+   <div id="ruleinputdiv" class="form-group">
+      <label class="control-label" for="ie2">Input a rule name</label>
+      <input type="text" class="form-control" id="ie2">
+      <span class="glyphicon glyphicon-remove form-control-feedback" aria-hidden="true"></span>
+   </div>
+
+   <button id="addrule" type="button" class="btn btn-default">Add a rule</button>
+{% end %}
+

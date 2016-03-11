@@ -1,0 +1,18 @@
+
+<div class="panel-group" id="repository-panel" role="tablist" aria-multiselectable="true">
+   <div class="panel panel-default">
+      <div class="panel-heading" role="tab" id="headingOne">
+         <h4 class="panel-title">
+            <a role="button" data-toggle="collapse" data-parent="#accordion" href="#{% block panelid %}repository{%end%}One" aria-expanded="true" aria-controls="{% block panelid %}repository{%end%}One">
+               {% block title%} Repository file tree {%end%}
+            </a>
+         </h4>
+      </div>
+      <div id="{% block panelid %}repository{%end%}One" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingOne">
+         <div id="{% block panelid %}panelid{%end%}" class="panel-body">
+            {% block panelbody %}
+            {% end %}
+         </div>
+      </div>
+   </div>
+</div>

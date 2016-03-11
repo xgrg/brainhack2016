@@ -10,13 +10,13 @@
 
       <div class="container">
          <br>
-         {% include "panels/preview.html" %}
+         {% module Template("html/panels/preview.html", repository=repository) %}
          <hr>
-         {% include "panels/identify.html" %}
+         {% module Template("html/panels/identify.html") %}
          <hr>
-         {% include "panels/rules.html" %}
+         {% module Template("html/panels/rules.html", hierarchy=hierarchy) %}
          <hr>
-         {% include "panels/results.html" %}
+         {% module Template("html/panels/results.html") %}
 
          <footer>
             <p>&copy; 2016 kandu, Inc.</p>

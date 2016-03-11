@@ -452,7 +452,9 @@ class Application(tornado.web.Application):
         static_path = osp.join(dirname, 'web', 'static')
         s = {
             "template_path":template_path,
-            "static_path":static_path
+            "static_path":static_path,
+            "compiled_template_cache":False,
+            "debug": True
             }
         tornado.web.Application.__init__(self, handlers, autoescape=None, **s)
 
