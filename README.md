@@ -1,3 +1,6 @@
+.. image:: https://circleci.com/gh/xgrg/kandu/tree/master.svg?style=shield&circle-token=:circle-token
+   :target: https://circleci.com/gh/xgrg/kandu/tree/master
+
 # Kandu
 
 Kandu wants to help with the complex file trees, that make the data impossible to control. It provides a simple web interface for three types of jobs:
