@@ -86,3 +86,18 @@ def strip_repository(d, repository):
    for k,v in d.items():
       res[k] = v.split('^%s'%repository + '/')[1]
    return res
+
+def lower(d):
+    res = {}
+    first_att = set([osp.split(each)[0] for each in d.values()])
+    if (len(first_att) != 1):
+        raise Exception('The rules do not share the same attribute : %s'%' '.join(first_att))
+    for k,v in d.items():
+        res[k] = '/'.join(v.split('/')[1:])
+    return res
+
+def add_level(d, parent):
+    res = {}
+    for k,v in d.items():
+        res[k] = osp.join(parent, v)
+    return res
