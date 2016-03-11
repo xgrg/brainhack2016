@@ -3,6 +3,7 @@
 import os.path as osp
 import os
 from kandu.patterns import parsefilepath
+from kandu import patterns as p
 
 
 def check_repository(repository, rules, firstcol = 'subject'):
@@ -23,11 +24,25 @@ def check_repository(repository, rules, firstcol = 'subject'):
 class Inventory():
    def __init__(self, repository, rules):
        self.repository = repository
-       self.rules = rules
+       self.rules = p.set_repository(rules, repository)
 
    def to_html(self):
        if not hasattr(self, 'identified'):
           raise Exception('run Inventory.run() first')
+       html = "<style>table, td, th { border: 1px solid darkgray; text-align:center; vertical-align:middle;}</style>"
+       html += '<table><tr><th>%s</th>'%self.firstcol
+       html += ''.join(['<th>%s</th>'%each for each in self.headers])
+       html += '</tr>'
+       colormap = ['brown', 'forestgreen', 'goldenrod']
+       for s, c in zip(self.index, self.count_table):
+           items = self.identified[s]
+           html += '<tr><td>%s</td>'%s
+           html += ''.join(['<td title="%s" style="background:%s">%s</td>'%(' \n'.join(items.get(e1, [])),
+                                                                            colormap[min(2,e2)],
+                                                                            e2) for e1, e2 in zip(self.headers, c)])
+           html += '</tr>'
+       html += '</table>'
+       return html
 
    def run(self, firstcol='subject'):
        print 'Inventory of %s in progress... This operation may be long.'%self.repository
@@ -37,6 +52,7 @@ class Inventory():
        print 'First column will be "%s"'%firstcol
        res = check_repository(self.repository, self.rules, firstcol)
        self.identified, self.unknown = res
+       self.firstcol = firstcol
 
        self.headers = set() #.intersection([e.keys() for k,e in identified.items()])
        for each in [e.keys() for k,e in self.identified.items()]:
@@ -46,8 +62,8 @@ class Inventory():
 
        self.count_table = []
        self.table = []
-       self.firstcol = self.identified.keys()
-       for s in self.firstcol:
+       self.index = self.identified.keys()
+       for s in self.index:
           self.count_table.append([len(self.identified[s].get(e, [])) for e in self.headers])
           self.table.append([self.identified[s].get(e, []) for e in self.headers])
 
