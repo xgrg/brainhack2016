@@ -1,0 +1,16 @@
+
+{% module Template("html/dropdown_load_presets.html", jsonfile=jsonfile) %}
+
+<div class="btn-group" data-toggle="buttons">
+   <label id="togglepreview" class="btn btn-primary {% if unknown_only %} active {%end%} ">
+<input type="checkbox" autocomplete="off" {% if unknown_only %} checked {%end%}  >Hide matched items
+</label>
+</div>
+<br><br>
+{{ heading_info }}
+<br>
+{{ files }}
+<br>
+{{ closing_info }}
+
+

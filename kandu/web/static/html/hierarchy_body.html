@@ -1,0 +1,12 @@
+<div id="hierarchy" class="btn-group btn-xs" data-toggle="buttons">'
+   {% for k, v in hierarchy.items() %}
+   <label class="btn btn-primary rule btn-xs" data-rule="{{ k }}">
+      <input type="checkbox" autocomplete="off"> {{ k }} : {{escape(v[len(repository)+1:])}}</label><br>
+   {%end%}
+</div>
+<br><br><button id="checkrules" type="button" class="btn btn-default">Check selected rules</button>
+{% module Template("html/dropdown_load_presets.html", jsonfile=jsonfile) %}
+<button id="save" type="button" class="btn btn-default">Save to {{jsonfile}}</button>
+<button id="validate" type="button" class="btn btn-default">Validate</button>
+
+

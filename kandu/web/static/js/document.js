@@ -221,7 +221,7 @@ $(document).ready(function(){
          'type': 'POST',
          'data': 'p=json',
          'success':function(data){
-            $("#rulesOne div.panel-body").html(data);
+            $("#rules").html(data);
             $('html, body').animate({
                scrollTop: $("#rulesOne").offset().top
             }, 2000);
