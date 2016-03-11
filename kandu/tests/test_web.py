@@ -5,9 +5,13 @@ def test_first():
    ''' Logs in and acts as if just asked for a non-existing study.
    Returns True if successfully redirected with an information message'''
    import requests
+   s = requests.Session()
    url = baseurl
    print url
    r = s.get(url)
    print r.text
    res = 'kandu' in r.text
    assert_true(res)
+
+
+

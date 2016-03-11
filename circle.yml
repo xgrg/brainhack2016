@@ -1,4 +1,5 @@
 test:
   override:
-    - kandu_server &
-    - python kandu/tests/test_web.py
+     - kandu_server --repository /home/ubuntu/kandu/kandu/tests/test_data/BVdatabase --hierarchy /tmp/hierarchy.json
+           background: true
+     - nosetests kandu
