@@ -1,0 +1,4 @@
+test:
+  override:
+    - kandu_server &
+    - python kandu/tests/test_web.py
