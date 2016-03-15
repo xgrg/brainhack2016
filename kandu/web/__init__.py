@@ -129,6 +129,16 @@ class SendTextHandler(BaseHandler):
             html = self.hierarchy_to_html()
             self.write(html)
 
+class FilterHandler(BaseHandler):
+    def post(self):
+
+        if 'ext' in self.request.arguments:
+            ext = self.get_argument('ext')
+            rule = '.*.' + ext
+            rulename = 'all_%s_files'%ext
+            self.engine.hierarchy.update({rulename: rule})
+            html = self.hierarchy_to_html()
+            self.write(html)
 
 class MainHandler(BaseHandler):
     def get(self):

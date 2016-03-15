@@ -46,17 +46,28 @@ $(document).ready(function(){
             $("li.assign").click(assign_rule);
             $("li.split").click(split);
             $("li.addrule").click(addrule);
+            $("#filterextension").click(filterextension);
    };
 
    function addrule(evt){
       var i = $("#ie2").val();
-
       $.ajax({'url': 'addrule',
          'type': 'POST',
          'data': 'text='+i,
          'success': reloadRules
       });
    };
+
+   function filterextension(evt){
+      ext = $(this).data('ext');
+      console.log(ext);
+      $.ajax({'url': 'filterext',
+         'type': 'POST',
+         'data': 'ext='+i,
+         'success': reloadRules
+      });
+   };
+
    function validate(evt){
       var params = {validate:"validate"};
       $("#loading-image").show();
@@ -71,8 +82,8 @@ $(document).ready(function(){
             $("#loading-image").hide();
          },
       });
-
    };
+
    function save(evt){
       var params = {validate:"save"};
       $.ajax({
@@ -215,11 +226,16 @@ $(document).ready(function(){
    };
 
    function clickFile(e){
+      var path = $(this).data('path');
+      var ext = path.split('.').pop();
       $.ajax({'url': 'identify',
          'type': 'POST',
-         'data': 'path='+$(this).data('path'),
+         'data': 'path='+ path,
          'success': function(data){
             $("div#identify").html(data);
+            $("#filterextension").text('Add rule for .'+ext);
+            $("#filterextension").data("ext", ext);
+            $("#filterextension").show();
             connectBitsBtn();
             scrollTo("#identify");
          }
@@ -232,14 +248,15 @@ $(document).ready(function(){
       }
       else {
          isActive = '1';
+         $("#loading-image").show();
       }
       $.ajax({'url': 'togglepreview',
          'type': 'get',
          'data': 'unknown_only='+isActive,
          'success': function(data){
             $("div#repository").html(data);
+            $("#loading-image").hide();
             connectPreviewBtn();
-
             connectLoadPresetsBtn();
          }
       });
