@@ -27,6 +27,36 @@ $(document).ready(function(){
 
       }
    };
+
+   function assign_joker(evt){
+      console.log($("#identify div.btn-group").index($(this).closest("div.btn-group")));
+      var i = $("#identify div.btn-group").index($(this).closest("div.btn-group"));
+      var v = '*';
+         // Rule has a name: we can assign the rule to the item
+         $.ajax({'url': 'setrule',
+            'type': 'POST',
+            'data': 'i='+i+"&v="+v,
+            'success': function(data){
+               $("div#identify").html(data);
+               connectBitsBtn();
+            }
+         });
+   };
+
+   function ignore_folder(evt){
+      var i = $("#identify div.btn-group").index($(this).closest("div.btn-group"));
+      var v = '**';
+         // Rule has a name: we can assign the rule to the item
+         $.ajax({'url': 'setrule',
+            'type': 'POST',
+            'data': 'i='+i+"&v="+v,
+            'success': function(data){
+               $("div#identify").html(data);
+               connectBitsBtn();
+            }
+         });
+   };
+
    function split(evt){
       console.log($("div.bit").index($(this).closest("div.bit")));
       var i = $("div.bit").index($(this).closest("div.bit"));
@@ -46,6 +76,8 @@ $(document).ready(function(){
             $("li.assign").click(assign_rule);
             $("li.split").click(split);
             $("li.addrule").click(addrule);
+            $("li.joker").click(assign_joker);
+            $("li.ignorefolder").click(ignore_folder);
             $("#filterextension").click(filterextension);
    };
 
@@ -63,7 +95,7 @@ $(document).ready(function(){
       console.log(ext);
       $.ajax({'url': 'filterext',
          'type': 'POST',
-         'data': 'ext='+i,
+         'data': 'ext='+ext,
          'success': reloadRules
       });
    };

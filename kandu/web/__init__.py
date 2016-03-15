@@ -44,7 +44,7 @@ class BaseHandler(tornado.web.RequestHandler):
         if self.engine.unknown_only:
             ignorelist.extend(self.engine.hierarchy.keys())
 
-        j = self.engine.get_n_first_files(self.engine.repository, n=self.engine.maxitems, ignorelist=ignorelist)
+        self.engine.n_first_files = self.engine.get_n_first_files(self.engine.repository, n=self.engine.maxitems, ignorelist=ignorelist)
 
         heading_info = ''
         if len(self.engine.ignorelist) != 0:
@@ -52,7 +52,7 @@ class BaseHandler(tornado.web.RequestHandler):
         if self.engine.unknown_only:
             heading_info += 'Files matching rules are not displayed<br><br>'
         files = ''.join(['<a data-path="%s" class="btn btn-default btn-xs" role="button">%s</a><br>'\
-            %(fp, fp[len(self.engine.repository)+1:]) for fp in j])
+            %(fp, fp[len(self.engine.repository)+1:]) for fp in self.engine.n_first_files])
         closing_info = '%s items max. displayed'%self.engine.maxitems
 
         return self.render_string('html/preview_body.html', unknown_only = self.engine.unknown_only,
@@ -134,7 +134,7 @@ class FilterHandler(BaseHandler):
 
         if 'ext' in self.request.arguments:
             ext = self.get_argument('ext')
-            rule = '.*.' + ext
+            rule = osp.join('^%s'%self.engine.repository, '.*.%s$'%ext)
             rulename = 'all_%s_files'%ext
             self.engine.hierarchy.update({rulename: rule})
             html = self.hierarchy_to_html()
@@ -142,11 +142,8 @@ class FilterHandler(BaseHandler):
 
 class MainHandler(BaseHandler):
     def get(self):
-        self.engine = Engine(repository = self.engine.repository,
-                    jsonfile = self.engine.jsonfile,
-                    ignorelist = self.engine.ignorelist,
-                    maxitems = self.engine.maxitems,
-                    unknown_only = False)
+        from kandu import patterns as p
+        self.engine.hierarchy = p.set_repository(json.load(open(self.engine.jsonfile)), self.engine.repository)
 
         html = self.get_preview_section()
         h = self.hierarchy_to_html()
@@ -155,11 +152,7 @@ class MainHandler(BaseHandler):
 class ToggleHandler(BaseHandler):
     def get(self):
         unknown_only = self.get_argument('unknown_only', '0')
-        self.engine = Engine(repository = self.engine.repository,
-                    jsonfile = self.engine.jsonfile,
-                    ignorelist = self.engine.ignorelist,
-                    maxitems = self.engine.maxitems,
-                    unknown_only = {'0':False, '1':True}[unknown_only])
+        self.engine.unknown_only = {'0':False, '1':True}[unknown_only]
         html = self.get_preview_section()
         self.write(html)
 
@@ -173,7 +166,6 @@ class ValidateHandler(BaseHandler):
             files = self.get_arguments('files[]')
             selected = self.get_arguments('selected[]')
             h = dict([(e, self.engine.hierarchy[e]) for e in selected])
-            print h
             for fp in files:
                 res = parsefilepath(fp, h)
                 if not res is None:
@@ -216,6 +208,7 @@ class Application(tornado.web.Application):
             (r"/setrule", SetRuleHandler,{'engine': engine}),
             (r"/validate", ValidateHandler, {'engine': engine} ),
             (r"/addrule", SendTextHandler, {'engine': engine} ),
+            (r"/filterext", FilterHandler, {'engine': engine} ),
             (r"/preset", PresetHandler, {'engine': engine} ),
             (r"/togglepreview", ToggleHandler, {'engine': engine} ),
             ]

@@ -1,5 +1,6 @@
 import os.path as osp
 import os, json
+import scandir
 import string
 from kandu import parsefilepath
 from kandu import patterns as p
@@ -34,7 +35,7 @@ class Engine():
         unknown = []
         identified = {}
         allatt = {}
-        for root, dirs, files in os.walk(self.repository):
+        for root, dirs, files in scandir.walk(self.repository):
             for f in files:
                 fp = osp.join(root, f)
                 res = parsefilepath(fp, self.hierarchy)
@@ -53,9 +54,8 @@ class Engine():
 
     def get_n_first_files(self, repo, n=100, ignorelist=[]):
         all_files = []
-        print self.hierarchy
 
-        for root, dirs, files in os.walk(repo):
+        for root, dirs, files in scandir.walk(repo):
             for f in files:
                 fp = osp.join(root, f)
                 res = parsefilepath(fp, self.hierarchy)
@@ -122,6 +122,13 @@ class Engine():
             if r == '':
                 # explicit
                 bits.append(b)
+            elif r == '**':
+                bits.append(b)
+                bits.append('/')
+                bits.append('.*')
+                break
+            elif r.startswith('*'):
+                bits.append('.*')
             elif r != '' and not b in processed:
                 # variable definition (every char except / and _)
                 bits.append('(?P<%s>[^/]+)'%r)

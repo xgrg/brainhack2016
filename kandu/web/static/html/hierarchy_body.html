@@ -1,7 +1,8 @@
 <div id="hierarchy" class="btn-group btn-xs" data-toggle="buttons">
    {% for k, v in hierarchy.items() %}
+   <p>
    <label class="btn btn-primary rule btn-xs" data-rule="{{ k }}">
-      <input type="checkbox" autocomplete="off"> {{ k }} : {{escape(v[len(repository)+1:])}}</label><br>
+      <input type="checkbox" autocomplete="off"> {{ k }} : {{escape(v[len(repository)+1:])}}</label></p>
    {%end%}
 </div>
 <br><br><button id="checkrules" type="button" class="btn btn-default">Check selected rules</button>
