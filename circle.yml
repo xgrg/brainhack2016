@@ -1,6 +1,9 @@
 dependencies:
      pre:
             - pip install requests
+            - pip install tornado
+            - pip install scandir
+
 test:
   pre:
      - bin/kandu_server --repository kandu/tests/test_data/BVdatabase --hierarchy /tmp/hierarchy.json :

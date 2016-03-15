@@ -8,6 +8,6 @@ setup(name='kandu',
       version='1.1',
       packages=['kandu', 'kandu.web'],
       scripts=['bin/kandu_server'],
-      install_requires=['tornado'],
+      install_requires=['tornado','requests','scandir'],
       include_package_data=True
       )
