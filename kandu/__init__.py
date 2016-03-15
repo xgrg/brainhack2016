@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import os.path as osp
-import os
+import os, scandir
 from kandu.patterns import parsefilepath
 from kandu import patterns as p
 
@@ -9,7 +9,7 @@ from kandu import patterns as p
 def check_repository(repository, rules, firstcol = 'subject'):
      unknown = []
      identified = {}
-     for root, dirs, files in os.walk(repository):
+     for root, dirs, files in scandir.walk(repository):
          for f in files:
              fp = osp.join(root, f)
              res = parsefilepath(fp, rules)
@@ -26,22 +26,39 @@ class Inventory():
        self.repository = repository
        self.rules = p.set_repository(rules, repository)
 
-   def to_html(self):
+   def to_html(self, style="standalone"):
        if not hasattr(self, 'identified'):
           raise Exception('run Inventory.run() first')
-       html = "<style>table, td, th { border: 1px solid darkgray; text-align:center; vertical-align:middle;}</style>"
-       html += '<table><tr><th>%s</th>'%self.firstcol
+       if style == 'standalone':
+          html = '''<html><head></head><body><style>
+               table.table, td, th { border: 1px solid darkgray; text-align:center; vertical-align:middle;
+               }
+               td.success { background-color:forestgreen}
+               td.warning { background-color:goldenrod}
+               td.danger {background-color:brown}
+               </style>'''
+       elif style == 'maxcdn':
+          html = '''<html><head>
+               <script src="https://code.jquery.com/jquery-1.12.0.min.js"></script>
+               <!-- Latest compiled and minified CSS -->
+               <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+               <!-- Optional theme -->
+               <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
+               <!-- Latest compiled and minified JavaScript -->
+               <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+               </head><body>'''
+       html += '<table class="table table-hover"><tr><th>%s</th>'%self.firstcol
        html += ''.join(['<th>%s</th>'%each for each in self.headers])
        html += '</tr>'
-       colormap = ['brown', 'forestgreen', 'goldenrod']
+       colormap = ['danger', 'success', 'warning']
        for s, c in zip(self.index, self.count_table):
            items = self.identified[s]
            html += '<tr><td>%s</td>'%s
-           html += ''.join(['<td title="%s" style="background:%s">%s</td>'%(' \n'.join(items.get(e1, [])),
+           html += ''.join(['<td title="%s" class="%s">%s</td>'%(' \n'.join([each[len(self.repository)+1:] for each in items.get(e1, [])]),
                                                                             colormap[min(2,e2)],
                                                                             e2) for e1, e2 in zip(self.headers, c)])
            html += '</tr>'
-       html += '</table>'
+       html += '</table></body></html>'
        return html
 
    def run(self, firstcol='subject'):
