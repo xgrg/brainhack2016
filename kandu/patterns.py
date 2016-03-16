@@ -59,6 +59,7 @@ morphologist = {
   "variance": osp.join("(?P<group>[^/]+)", "(?P<subject>[^/]+)", "(?P<modality>[^/]+)", "(?P<acquisition>[^/]+)", "(?P<analysis>[^/]+)", "variance_(?P=subject).(?P<extension>%s)"%image_extensions),
   "whiteridge": osp.join("(?P<group>[^/]+)", "(?P<subject>[^/]+)", "(?P<modality>[^/]+)", "(?P<acquisition>[^/]+)", "(?P<analysis>[^/]+)", "whiteridge_(?P=subject).(?P<extension>%s)"%image_extensions),
   "hfiltered": osp.join("(?P<group>[^/]+)", "(?P<subject>[^/]+)", "(?P<modality>[^/]+)", "(?P<acquisition>[^/]+)", "(?P<analysis>[^/]+)", "hfiltered_(?P=subject).(?P<extension>%s)"%image_extensions),
+  "skull_stripped": osp.join("(?P<group>[^/]+)", "(?P<subject>[^/]+)", "(?P<modality>[^/]+)", "(?P<acquisition>[^/]+)", "(?P<analysis>[^/]+)", "segmentation", "skull_stripped_(?P=subject).(?P<extension>%s)"%image_extensions),
   "nobias": osp.join("(?P<group>[^/]+)", "(?P<subject>[^/]+)", "(?P<modality>[^/]+)", "(?P<acquisition>[^/]+)", "default_analysis/nobias_(?P=subject).(?P<extension>%s)"%image_extensions),
   "nobias_his": osp.join("(?P<group>[^/]+)", "(?P<subject>[^/]+)", "(?P<modality>[^/]+)", "(?P<acquisition>[^/]+)", "(?P<analysis>[^/]+)", "nobias_(?P=subject).his$"),
   "nobias_han": osp.join("(?P<group>[^/]+)", "(?P<subject>[^/]+)", "(?P<modality>[^/]+)", "(?P<acquisition>[^/]+)", "(?P<analysis>[^/]+)", "nobias_(?P=subject).han$"),
