@@ -16,19 +16,22 @@ def check_repository(repository, rules, firstcol = 'subject'):
              if not res is None:
                  datatype, att = res
                  if firstcol in att:
-                    identified.setdefault(att[firstcol], {}).setdefault(datatype, []).append(fp)
+                     identified.setdefault(att[firstcol], {}).setdefault(datatype, []).append(fp[len(repository)+1:])
              else:
                  unknown.append(fp[len(repository)+1:])
      return identified, unknown
 
 class Inventory():
    def __init__(self, repository, rules):
-       self.repository = repository
+       self.repository = repository.rstrip('/')
        self.rules = p.set_repository(rules, repository)
 
    def to_html(self, style="standalone"):
        if not hasattr(self, 'identified'):
           raise Exception('run Inventory.run() first')
+       if not style in ['standalone', 'maxcdn']:
+           print style, 'not recognized, set to standalone by default'
+           style = 'standalone'
        if style == 'standalone':
           html = '''<html><head></head><body><style>
                table.table, td, th { border: 1px solid darkgray; text-align:center; vertical-align:middle;
@@ -51,10 +54,10 @@ class Inventory():
        html += ''.join(['<th>%s</th>'%each for each in self.headers])
        html += '</tr>'
        colormap = ['danger', 'success', 'warning']
-       for s, c in zip(self.index, self.count_table):
+       for s, c in zip(sorted(self.index), self.count_table):
            items = self.identified[s]
            html += '<tr><td>%s</td>'%s
-           html += ''.join(['<td title="%s" class="%s">%s</td>'%(' \n'.join([each[len(self.repository)+1:] for each in items.get(e1, [])]),
+           html += ''.join(['<td title="%s" class="%s">%s</td>'%(' \n'.join([each for each in items.get(e1, [])]),
                                                                             colormap[min(2,e2)],
                                                                             e2) for e1, e2 in zip(self.headers, c)])
            html += '</tr>'
