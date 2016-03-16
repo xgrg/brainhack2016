@@ -9,7 +9,7 @@ Kandu wants to help with the complex file trees, that make the data impossible t
   - perform a full check over a repository
 
 ### Version
-pre-alpha 1.0
+1.1.1 (in development)
 
 ### Usage
 
