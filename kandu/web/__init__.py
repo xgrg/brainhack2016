@@ -156,6 +156,16 @@ class ToggleHandler(BaseHandler):
         html = self.get_preview_section()
         self.write(html)
 
+class TestHandler(BaseHandler):
+    def get(self):
+        from kandu import patterns as p
+        self.engine.hierarchy = p.set_repository(json.load(open(self.engine.jsonfile)), self.engine.repository)
+
+        html = self.get_preview_section()
+        h = self.hierarchy_to_html()
+        html = self.render_string("html/index.html", repository = html, hierarchy = h)
+        html = html.replace('<script id="tests"></script>', '<script>%s</script>'%self.render_string('js/tests.js'))
+        self.write(html)
 
 class ValidateHandler(BaseHandler):
     def post(self):
@@ -211,6 +221,7 @@ class Application(tornado.web.Application):
             (r"/filterext", FilterHandler, {'engine': engine} ),
             (r"/preset", PresetHandler, {'engine': engine} ),
             (r"/togglepreview", ToggleHandler, {'engine': engine} ),
+            (r"/test", TestHandler, {'engine': engine} ),
             ]
         import kandu
         dirname = osp.dirname(kandu.__file__)

@@ -1,8 +1,6 @@
 dependencies:
      pre:
-            - pip install requests
-            - pip install tornado
-            - pip install scandir
+            - pip install requests tornado scandir selenium
 
 test:
   pre:
