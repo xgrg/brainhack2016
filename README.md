@@ -8,6 +8,8 @@ Kandu wants to help with the complex file trees, that make the data impossible t
   - checking how these expressions match the filepaths in a given repository
   - perform a full check over a repository
 
+Watch a [demo](https://www.youtube.com/watch?v=msrkpzOE8yE) on Youtube.
+
 ### Version
 1.1.1 (in development)
 
@@ -20,7 +22,6 @@ $ pip install kandu
 $ kandu_server --repository /path/to/repo --hierarchy /path/to/output.json
 ```
 Then open a browser at http://localhost:8888.
-
 
 
 ![alt tag](http://raw.githubusercontent.com/xgrg/kandu/master/doc/screenshot.png)
