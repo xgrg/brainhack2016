@@ -54,12 +54,13 @@ class Inventory():
        html += ''.join(['<th>%s</th>'%each for each in self.headers])
        html += '</tr>'
        colormap = ['danger', 'success', 'warning']
-       for s, c in zip(sorted(self.index), self.count_table):
+       for s, c in zip(self.index, self.count_table):
            items = self.identified[s]
            html += '<tr><td>%s</td>'%s
-           html += ''.join(['<td title="%s" class="%s">%s</td>'%(' \n'.join([each for each in items.get(e1, [])]),
+           row = ['<td title="%s" class="%s">%s</td>'%(' \n'.join([each for each in items.get(e1, [])]),
                                                                             colormap[min(2,e2)],
-                                                                            e2) for e1, e2 in zip(self.headers, c)])
+                                                                            e2) for e1, e2 in zip(self.headers, c)]
+           html += ''.join(row)
            html += '</tr>'
        html += '</table></body></html>'
        return html
@@ -82,7 +83,7 @@ class Inventory():
 
        self.count_table = []
        self.table = []
-       self.index = self.identified.keys()
+       self.index = sorted(self.identified.keys())
        for s in self.index:
           self.count_table.append([len(self.identified[s].get(e, [])) for e in self.headers])
           self.table.append([self.identified[s].get(e, []) for e in self.headers])
